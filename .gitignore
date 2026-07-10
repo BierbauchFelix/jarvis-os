@@ -1,0 +1,16 @@
+# Betriebssystem
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Tab5 / ESPHome (bleibt lokal, enthält Zugangsdaten)
+tab5/
+secrets.yaml
+
+# Logs & Temp
+*.log
+node_modules/
