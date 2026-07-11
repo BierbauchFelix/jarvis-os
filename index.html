@@ -275,6 +275,7 @@
         @keyframes lineInJ { 0% { opacity:0; transform: translateX(-6px); } 100% { opacity:1; transform: translateX(0); } }
         @keyframes sunRotateJ { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes notePopN { 0% { opacity:0; transform: scale(0.85) rotate(-2deg); } 60% { opacity:1; transform: scale(1.02) rotate(1deg); } 100% { opacity:1; transform: scale(1) rotate(-1deg); } }
+        @keyframes cursorBlinkN { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
         @keyframes stampInJ { 0% { opacity:0; transform: scale(2.4); } 55% { opacity:1; transform: scale(0.9); } 75% { transform: scale(1.06); } 100% { opacity:1; transform: scale(1); } }
         @keyframes sparklePopJ { 0% { opacity:0; transform: scale(0.2); } 35% { opacity:1; transform: scale(1.25); } 100% { opacity:0; transform: scale(0.5) translateY(-18px); } }
 
@@ -421,7 +422,7 @@
                     <pattern id="scanPatJ" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1" fill="#5566cc" opacity="0.03"/></pattern>
                     <clipPath id="eyeClipJ"><circle cx="0" cy="0" r="46"/></clipPath>
                     <clipPath id="bodyClipIdleJ"><ellipse cx="280" cy="470" rx="66" ry="62"/></clipPath>
-                    <clipPath id="noteClipN"><rect x="665" y="190" width="380" height="280" rx="4"/></clipPath>
+                    <clipPath id="noteClipN"><rect x="665" y="190" width="380" height="280" rx="10"/></clipPath>
                     <clipPath id="musicCoverClipJ"><circle cx="640" cy="330" r="148"/></clipPath>
                     <clipPath id="idleAlbumClipJ"><rect x="0" y="0" width="68" height="68" rx="10"/></clipPath>
                     <clipPath id="idleAlbum2ClipJ"><rect x="0" y="0" width="60" height="60" rx="8"/></clipPath>
@@ -696,12 +697,17 @@
                     <g id="avatarBundleJ">
                         <circle cx="640" cy="340" r="340" fill="url(#ambBigJ)"/>
 
-                        <!-- Fortschrittsring für den TIMER -->
+                        <!-- Fortschrittsring für den TIMER (HUD-Stil) -->
                         <g id="timerRingGroupO" opacity="0">
-                            <circle cx="640" cy="330" r="195" fill="none" stroke="#26262b" stroke-width="16"/>
-                            <path id="progressArcO" fill="none" stroke="#8a8a95" stroke-width="16" stroke-linecap="round"/>
-                            <circle id="progressDotO" r="9" fill="#b4b4bd"/>
-                            <!-- Figur in der Ring-Mitte, Arm folgt dem Timer-Punkt -->
+                            <circle cx="640" cy="330" r="222" fill="none" stroke="#33447a" stroke-width="1" stroke-dasharray="2 10" opacity="0.5"/>
+                            <g stroke="#7d63d8" stroke-width="2" opacity="0.7">
+                                <line x1="640" y1="100" x2="640" y2="112"/><line x1="640" y1="548" x2="640" y2="560"/>
+                                <line x1="410" y1="330" x2="422" y2="330"/><line x1="858" y1="330" x2="870" y2="330"/>
+                            </g>
+                            <circle cx="640" cy="330" r="195" fill="none" stroke="#1a2038" stroke-width="16"/>
+                            <path id="progressArcO" fill="none" stroke="#7d63d8" stroke-width="16" stroke-linecap="round" filter="url(#eyeGlowJ)"/>
+                            <circle id="progressDotO" r="9" fill="#c9d0ff" filter="url(#coreBlurJ)"/>
+                            <!-- Holo-Emblem in der Ring-Mitte -->
                             <g transform="translate(416,40) scale(0.8)"><use href="#holoAvatarJ"/></g>
                         </g>
 
@@ -753,37 +759,42 @@
                         </g>
                     </g>
 
-                    <!-- TIMER TEXT & DETAILS -->
+                    <!-- TIMER TEXT & DETAILS (HUD-Stil) -->
                     <g id="timerDetailsGroupO" class="fadeFastJ" opacity="0">
-                        <text id="timerNameO" x="640" y="90" text-anchor="middle" style="font-size:24px;fill:#EEF1F9;font-weight:500">Timer</text>
-                        <text id="timeDisplayO" x="640" y="585" text-anchor="middle" style="font-size:56px;fill:#EEF1F9;font-weight:500">10:00</text>
-                        <text x="640" y="615" text-anchor="middle" style="font-size:14px;fill:#b4b4bd">verbleibend</text>
-                        <text id="endTimeO" x="640" y="650" text-anchor="middle" style="font-size:14px;fill:#b4b4bd">Endet um --:--</text>
+                        <text id="timerNameO" x="640" y="76" text-anchor="middle" style="font-size:21px;fill:#EEF1F9;font-weight:600;letter-spacing:2px">Timer</text>
+                        <text x="640" y="96" text-anchor="middle" style="font-size:9px;fill:#7d63d8;letter-spacing:4px">◈ COUNTDOWN AKTIV</text>
+                        <text id="timeDisplayO" x="640" y="588" text-anchor="middle" style="font-size:56px;fill:#EEF1F9;font-weight:600" filter="url(#eyeGlowJ)">10:00</text>
+                        <text x="640" y="614" text-anchor="middle" style="font-size:10px;fill:#7d63d8;letter-spacing:4px">VERBLEIBEND</text>
+                        <text id="endTimeO" x="640" y="648" text-anchor="middle" style="font-size:13px;fill:#838fb8;letter-spacing:1px">Endet um --:--</text>
                     </g>
 
-                    <!-- MEHRFACH-TIMER (2+ Timer nebeneinander) -->
+                    <!-- MEHRFACH-TIMER (2+ Timer nebeneinander, HUD-Stil) -->
                     <g id="multiTimerModeJ" class="fadeFastJ" opacity="0" style="visibility:hidden;pointer-events:none">
-                        <text x="640" y="90" text-anchor="middle" style="font-size:24px;fill:#EEF1F9;font-weight:500">⏱ Aktive Timer</text>
-                        <line x1="440" y1="112" x2="840" y2="112" stroke="#33447a" stroke-width="1" opacity="0.5"/>
+                        <text x="640" y="82" text-anchor="middle" style="font-size:22px;fill:#EEF1F9;font-weight:600;letter-spacing:1px">⏱ Aktive Timer</text>
+                        <text x="640" y="102" text-anchor="middle" style="font-size:9px;fill:#7d63d8;letter-spacing:4px">◈ MULTI-COUNTDOWN</text>
+                        <line x1="440" y1="116" x2="840" y2="116" stroke="#33447a" stroke-width="1" opacity="0.5"/>
                         <g id="multiTimerCardsJ"></g>
                     </g>
 
-                    <!-- KARIERTER NOTIZZETTEL -->
+                    <!-- HOLOGRAFISCHES NOTIZ-PAD -->
                     <g transform="translate(-215,0)">
                     <g id="noteGroupN" class="fadeFastJ" opacity="0" style="visibility:hidden;transform-origin: 855px 330px;">
-                        <rect x="669" y="196" width="380" height="280" rx="4" fill="#1A1810" opacity="0.3"/>
-                        <rect x="665" y="190" width="380" height="280" rx="4" fill="#F2DD6B"/>
+                        <rect x="671" y="198" width="380" height="280" rx="10" fill="#000000" opacity="0.35"/>
+                        <rect x="665" y="190" width="380" height="280" rx="10" fill="#0b0e18" stroke="#33447a" stroke-width="1.5"/>
+                        <rect x="665" y="190" width="380" height="3" rx="1.5" fill="url(#neonLineJ)"/>
+                        <rect x="665" y="190" width="380" height="280" rx="10" fill="url(#coreGlowJ)" opacity="0.05"/>
                         <g clip-path="url(#noteClipN)">
-                            <g stroke="#D8C44A" stroke-width="1">
-                                <line x1="665" y1="218" x2="1045" y2="218"/><line x1="665" y1="246" x2="1045" y2="246"/>
-                                <line x1="665" y1="274" x2="1045" y2="274"/><line x1="665" y1="302" x2="1045" y2="302"/>
-                                <line x1="665" y1="330" x2="1045" y2="330"/><line x1="665" y1="358" x2="1045" y2="358"/>
-                                <line x1="665" y1="386" x2="1045" y2="386"/><line x1="665" y1="414" x2="1045" y2="414"/>
-                                <line x1="693" y1="190" x2="693" y2="470"/><line x1="721" y1="190" x2="721" y2="470"/>
-                                <line x1="749" y1="190" x2="749" y2="470"/><line x1="777" y1="190" x2="777" y2="470"/>
+                            <g stroke="#1a2038" stroke-width="1">
+                                <line x1="665" y1="246" x2="1045" y2="246"/><line x1="665" y1="274" x2="1045" y2="274"/>
+                                <line x1="665" y1="302" x2="1045" y2="302"/><line x1="665" y1="330" x2="1045" y2="330"/>
+                                <line x1="665" y1="358" x2="1045" y2="358"/><line x1="665" y1="386" x2="1045" y2="386"/>
+                                <line x1="665" y1="414" x2="1045" y2="414"/><line x1="665" y1="442" x2="1045" y2="442"/>
                             </g>
                         </g>
-                        <rect x="825" y="178" width="60" height="24" rx="2" fill="#F2DD6B" stroke="#D8C44A" stroke-width="1" transform="rotate(-3 855 190)"/>
+                        <!-- Eck-Klammern (lila Akzent) -->
+                        <path d="M 679 216 L 679 202 L 693 202 M 1031 444 L 1031 458 L 1017 458" fill="none" stroke="#9b6ce0" stroke-width="1.5" opacity="0.85"/>
+                        <rect x="683" y="206" width="3" height="24" rx="1.5" fill="#7d63d8" filter="url(#eyeGlowJ)"/>
+                        <text x="696" y="223" style="font-size:10px;fill:#5566cc;letter-spacing:3px">◈ NOTIZ-EINGABE</text>
                         <g id="noteTextN"></g>
                     </g>
                     </g>
@@ -908,79 +919,93 @@
                         <g id="infoLinesJ"></g>
                     </g>
 
-                    <!-- NOTIZEN LISTE -->
+                    <!-- NOTIZEN LISTE (HUD-Archiv) -->
                     <g id="notesListModeJ" class="fadeFastJ" opacity="0" style="visibility:hidden">
-                        <!-- Schwebende Mini-Notizen -->
-                        <g transform="rotate(-8 195 165)">
-                            <rect x="150" y="130" width="90" height="70" rx="8" fill="#fff8dc" opacity="0.92"/>
-                            <line x1="162" y1="150" x2="228" y2="150" stroke="#c9b98a" stroke-width="2"/>
-                            <line x1="162" y1="164" x2="228" y2="164" stroke="#c9b98a" stroke-width="2"/>
-                            <line x1="162" y1="178" x2="210" y2="178" stroke="#c9b98a" stroke-width="2"/>
+                        <!-- Schwebende Holo-Datenkarten -->
+                        <g opacity="0.55" transform="rotate(-6 195 165)">
+                            <rect x="150" y="130" width="90" height="64" rx="8" fill="#0b0e18" stroke="#33447a" stroke-width="1"/>
+                            <rect x="150" y="130" width="90" height="2" fill="url(#neonLineJ)"/>
+                            <line x1="162" y1="152" x2="228" y2="152" stroke="#33447a" stroke-width="2"/>
+                            <line x1="162" y1="166" x2="228" y2="166" stroke="#33447a" stroke-width="2"/>
+                            <line x1="162" y1="180" x2="210" y2="180" stroke="#7d63d8" stroke-width="2" opacity="0.7"/>
                         </g>
-                        <g transform="rotate(6 485 195)">
-                            <rect x="440" y="160" width="90" height="70" rx="8" fill="#fff8dc" opacity="0.92"/>
-                            <line x1="452" y1="180" x2="518" y2="180" stroke="#c9b98a" stroke-width="2"/>
-                            <line x1="452" y1="194" x2="518" y2="194" stroke="#c9b98a" stroke-width="2"/>
-                            <line x1="452" y1="208" x2="500" y2="208" stroke="#c9b98a" stroke-width="2"/>
+                        <g opacity="0.55" transform="rotate(5 485 195)">
+                            <rect x="440" y="160" width="90" height="64" rx="8" fill="#0b0e18" stroke="#33447a" stroke-width="1"/>
+                            <rect x="440" y="160" width="90" height="2" fill="url(#neonLineJ)"/>
+                            <line x1="452" y1="182" x2="518" y2="182" stroke="#33447a" stroke-width="2"/>
+                            <line x1="452" y1="196" x2="518" y2="196" stroke="#33447a" stroke-width="2"/>
+                            <line x1="452" y1="210" x2="500" y2="210" stroke="#7d63d8" stroke-width="2" opacity="0.7"/>
                         </g>
-                        <g transform="rotate(-5 185 415)">
-                            <rect x="140" y="380" width="90" height="70" rx="8" fill="#fff8dc" opacity="0.85"/>
-                            <line x1="152" y1="400" x2="218" y2="400" stroke="#c9b98a" stroke-width="2"/>
-                            <line x1="152" y1="414" x2="218" y2="414" stroke="#c9b98a" stroke-width="2"/>
+                        <g opacity="0.45" transform="rotate(-4 185 415)">
+                            <rect x="140" y="380" width="90" height="64" rx="8" fill="#0b0e18" stroke="#33447a" stroke-width="1"/>
+                            <rect x="140" y="380" width="90" height="2" fill="url(#neonLineJ)"/>
+                            <line x1="152" y1="402" x2="218" y2="402" stroke="#33447a" stroke-width="2"/>
+                            <line x1="152" y1="416" x2="218" y2="416" stroke="#7d63d8" stroke-width="2" opacity="0.7"/>
                         </g>
 
-                        <!-- Figur mit Bleistift -->
+                        <!-- Holo-Emblem -->
                         <g transform="translate(122,40) scale(0.85)"><use href="#holoAvatarJ"/></g>
-                        <foreignObject x="710" y="70" width="490" height="580">
-                            <div xmlns="http://www.w3.org/1999/xhtml" style="background:rgba(26,22,54,0.7);border:1px solid #3a3a42;border-radius:20px;padding:22px;color:#fff;box-sizing:border-box;height:100%;display:flex;flex-direction:column;">
-                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
-                                    <span style="font-size:18px;font-weight:600;color:#eef1f9;">📋 Notizen</span>
-                                    <span id="notesCountBadge" style="font-size:12px;color:#8a8a95;background:#1a2038;padding:4px 10px;border-radius:20px;">0 gespeichert</span>
+                        <text x="280" y="596" text-anchor="middle" style="font-size:13px;fill:#c9d0ff;letter-spacing:4px;font-weight:600">NOTIZ-ARCHIV</text>
+                        <text x="280" y="618" text-anchor="middle" style="font-size:10px;fill:#7d63d8;letter-spacing:3px">DATENBANK · SYNCHRON</text>
+
+                        <!-- ═══ HUD-Panel rechts ═══ -->
+                        <rect x="700" y="70" width="510" height="580" rx="16" fill="#0b0e18" stroke="#33447a" stroke-width="1.5"/>
+                        <rect x="700" y="70" width="510" height="3" rx="1.5" fill="url(#neonLineJ)"/>
+                        <rect x="700" y="70" width="510" height="580" rx="16" fill="url(#coreGlowJ)" opacity="0.04"/>
+                        <path d="M 714 92 L 714 78 L 728 78 M 1196 78 L 1196 92 M 714 628 L 714 642 L 728 642 M 1196 642 L 1196 628" fill="none" stroke="#9b6ce0" stroke-width="1.6" opacity="0.85"/>
+                        <rect x="720" y="92" width="4" height="40" rx="2" fill="#7d63d8" filter="url(#eyeGlowJ)"/>
+                        <text x="740" y="112" style="font-size:15px;fill:#EEF1F9;font-weight:600">📋 Notizen</text>
+                        <text x="740" y="130" style="font-size:10px;fill:#5566cc;letter-spacing:3px">◈ DATEN-ARCHIV</text>
+                        <line x1="720" y1="148" x2="1190" y2="148" stroke="#33447a" stroke-width="1" opacity="0.6"/>
+                        <foreignObject x="716" y="158" width="486" height="482">
+                            <div xmlns="http://www.w3.org/1999/xhtml" style="color:#fff;box-sizing:border-box;height:100%;display:flex;flex-direction:column;">
+                                <div style="display:flex;justify-content:flex-end;margin-bottom:10px;flex-shrink:0;">
+                                    <span id="notesCountBadge" style="font-size:11px;color:#8a93b8;background:rgba(85,102,204,0.15);border:1px solid rgba(125,99,216,0.4);padding:4px 12px;border-radius:20px;letter-spacing:1px;">0 gespeichert</span>
                                 </div>
                                 <div id="notesListContainer" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;"></div>
-                                <div style="margin-top:14px;font-size:11px;color:#3a3a42;text-align:center;">Befehle: "notiz löschen 1" · "notiz löschen alle"</div>
+                                <div style="margin-top:12px;font-size:10px;color:#55608c;text-align:center;letter-spacing:1px;">Befehle: "notiz löschen 1" · "notiz löschen alle"</div>
                             </div>
                         </foreignObject>
                     </g>
 
-                    <!-- MUSIK PLAYER -->
+                    <!-- MUSIK PLAYER (HUD-Stil) -->
                     <g id="musicModeJ" class="fadeFastJ" opacity="0" style="visibility:hidden">
-                        <!-- Figur (mittig, hinter dem Cover) -->
+                        <!-- Holo-Emblem (mittig, hinter dem Cover) -->
                         <g transform="translate(382,16) scale(0.92)"><use href="#holoAvatarJ"/></g>
 
-                        <!-- Cover Art (vor dem Körper, von oben gehalten) -->
-                        <rect x="570" y="350" width="140" height="140" rx="12" fill="#1a2038" stroke="#24242a" stroke-width="1.5"/>
+                        <!-- Glow hinter dem Cover -->
+                        <circle cx="640" cy="420" r="140" fill="url(#coreGlowJ)" opacity="0.25"/>
+
+                        <text x="640" y="196" text-anchor="middle" style="font-size:10px;fill:#5566cc;letter-spacing:4px">◈ NOW PLAYING</text>
+
+                        <!-- Cover Art -->
+                        <rect x="570" y="350" width="140" height="140" rx="12" fill="#1a2038" stroke="#33447a" stroke-width="1.5"/>
                         <image id="musicCoverImgJ" href="" x="570" y="350" width="140" height="140"
                                preserveAspectRatio="xMidYMid slice" opacity="0" style="clip-path:inset(0 round 12px)"/>
                         <text id="musicCoverFallbackJ" x="640" y="436" text-anchor="middle"
                               style="font-size:42px;">🎵</text>
-                        <rect x="570" y="350" width="140" height="140" rx="12" fill="none" stroke="#3a3a42" stroke-width="2"/>
-
-                        <!-- Hände greifen von oben auf den Cover-Rand -->
-                        <g transform="translate(382,16) scale(0.92)">
-                            <circle cx="236" cy="364" r="11" fill="url(#podGJ)"/>
-                            <circle cx="324" cy="364" r="11" fill="url(#podGJ)"/>
-                        </g>
+                        <!-- Eck-Klammern ums Cover (lila Akzent) -->
+                        <path d="M 562 358 L 562 342 L 578 342 M 702 342 L 718 342 L 718 358 M 562 482 L 562 498 L 578 498 M 718 482 L 718 498 L 702 498" fill="none" stroke="#9b6ce0" stroke-width="1.6" opacity="0.85"/>
 
                         <!-- Titel & Künstler -->
-                        <text id="musicTitleJ" x="640" y="516" text-anchor="middle"
+                        <text id="musicTitleJ" x="640" y="522" text-anchor="middle"
                               style="font-size:20px;fill:#eef1f9;font-weight:700;">Lade...</text>
-                        <text id="musicArtistJ" x="640" y="544" text-anchor="middle"
-                              style="font-size:14px;fill:#8a8a95;">Spotify</text>
+                        <text id="musicArtistJ" x="640" y="548" text-anchor="middle"
+                              style="font-size:14px;fill:#838fb8;">Spotify</text>
 
                         <!-- Progress Bar -->
-                        <rect x="380" y="566" width="520" height="5" rx="2.5" fill="#26262b"/>
-                        <rect id="musicProgressBarJ" x="380" y="566" width="0" height="5" rx="2.5" fill="#8a8a95"/>
-                        <text id="musicTimeJ" x="380" y="584" style="font-size:11px;fill:#3a3a42;">0:00</text>
-                        <text id="musicDurJ" x="900" y="584" text-anchor="end" style="font-size:11px;fill:#3a3a42;">0:00</text>
+                        <rect x="380" y="566" width="520" height="5" rx="2.5" fill="#1a2038"/>
+                        <rect id="musicProgressBarJ" x="380" y="566" width="0" height="5" rx="2.5" fill="#7d63d8" filter="url(#eyeGlowJ)"/>
+                        <text id="musicTimeJ" x="380" y="584" style="font-size:11px;fill:#55608c;">0:00</text>
+                        <text id="musicDurJ" x="900" y="584" text-anchor="end" style="font-size:11px;fill:#55608c;">0:00</text>
 
                         <!-- Steuerung -->
                         <foreignObject x="490" y="592" width="300" height="64">
                             <div xmlns="http://www.w3.org/1999/xhtml"
                                  style="display:flex;justify-content:center;align-items:center;gap:16px;">
-                                <button onclick="prevTrack()" style="background:#26262b;border:1px solid #3a3a42;color:#eef1f9;width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:18px;">⏮</button>
-                                <button onclick="toggleMusicPlay()" id="playPauseBtnJ" style="background:#8a8a95;border:none;color:#0a0813;width:58px;height:58px;border-radius:50%;cursor:pointer;font-size:22px;">⏸</button>
-                                <button onclick="skipTrack()" style="background:#26262b;border:1px solid #3a3a42;color:#eef1f9;width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:18px;">⏭</button>
+                                <button onclick="prevTrack()" style="background:rgba(20,24,40,0.85);border:1px solid #33447a;color:#c9d0ff;width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:18px;">⏮</button>
+                                <button onclick="toggleMusicPlay()" id="playPauseBtnJ" style="background:linear-gradient(135deg,#5566cc,#9b6ce0);border:none;color:#ffffff;width:58px;height:58px;border-radius:50%;cursor:pointer;font-size:22px;box-shadow:0 0 18px rgba(155,108,224,0.55);">⏸</button>
+                                <button onclick="skipTrack()" style="background:rgba(20,24,40,0.85);border:1px solid #33447a;color:#c9d0ff;width:46px;height:46px;border-radius:50%;cursor:pointer;font-size:18px;">⏭</button>
                             </div>
                         </foreignObject>
                     </g>
@@ -1027,10 +1052,15 @@
                         <rect x="0" y="0" width="1280" height="720" fill="url(#bgGJ)"/>
                         <!-- Cover Blur-Hintergrund (groß, unscharf) -->
                         <image id="fullCoverBgJ" href="" x="-60" y="-60" width="700" height="840" preserveAspectRatio="xMidYMid slice" opacity="0.12" style="filter:blur(30px)"/>
+                        <!-- HUD-Rahmen (Bildschirm-Ecken) -->
+                        <path d="M 30 62 L 30 32 L 60 32 M 1220 32 L 1250 32 L 1250 62 M 30 658 L 30 688 L 60 688 M 1250 658 L 1250 688 L 1220 688" fill="none" stroke="#33447a" stroke-width="1.5" opacity="0.7"/>
+                        <text x="1210" y="52" text-anchor="end" style="font-size:9px;fill:#5566cc;letter-spacing:3px">◈ SPOTIFY LINK</text>
                         <!-- Cover Art -->
-                        <rect x="70" y="110" width="390" height="390" rx="20" fill="#1a2038" stroke="#24242a" stroke-width="1"/>
+                        <rect x="70" y="110" width="390" height="390" rx="20" fill="#1a2038" stroke="#33447a" stroke-width="1"/>
                         <image id="fullCoverImgJ" href="" x="70" y="110" width="390" height="390" preserveAspectRatio="xMidYMid slice" style="clip-path:inset(0 round 20px)"/>
                         <text id="fullCoverFallbackJ" x="265" y="325" text-anchor="middle" style="font-size:80px">🎵</text>
+                        <!-- Eck-Klammern ums Cover (lila Akzent) -->
+                        <path d="M 58 128 L 58 98 L 88 98 M 442 98 L 472 98 L 472 128 M 58 482 L 58 512 L 88 512 M 472 482 L 472 512 L 442 512" fill="none" stroke="#9b6ce0" stroke-width="1.8" opacity="0.8"/>
                         <!-- Animierte Equalizer-Balken unterm Cover -->
                         <g id="fullEqJ" opacity="0.6">
                             <rect x="110" y="518" width="8" height="14" rx="3" fill="#1DB954"><animate attributeName="height" values="6;22;6" dur="0.6s" repeatCount="indefinite"/><animate attributeName="y" values="526;510;526" dur="0.6s" repeatCount="indefinite"/></rect>
@@ -1043,30 +1073,30 @@
                         <!-- Rechte Seite: Info + Controls als foreignObject -->
                         <foreignObject x="510" y="60" width="730" height="600">
                             <div xmlns="http://www.w3.org/1999/xhtml" style="height:100%;display:flex;flex-direction:column;justify-content:center;padding:0 40px;box-sizing:border-box;">
-                                <div style="font-size:10px;color:#3a3a42;letter-spacing:5px;margin-bottom:24px">NOW PLAYING</div>
+                                <div style="font-size:10px;color:#5566cc;letter-spacing:5px;margin-bottom:24px">◈ NOW PLAYING</div>
                                 <div id="fullTitleJ" style="font-size:32px;color:#EEF1F9;font-weight:700;line-height:1.2;margin-bottom:10px">Lade...</div>
                                 <div id="fullArtistJ" style="font-size:18px;color:#1DB954;margin-bottom:6px">Künstler</div>
-                                <div id="fullAlbumJ" style="font-size:13px;color:#3a3a42;margin-bottom:36px">Album</div>
+                                <div id="fullAlbumJ" style="font-size:13px;color:#55608c;margin-bottom:36px">Album</div>
 
                                 <!-- Progress -->
                                 <div style="position:relative;height:4px;background:#1a2038;border-radius:2px;margin-bottom:8px;">
                                     <div id="fullProgressJ" style="height:100%;width:0%;background:#1DB954;border-radius:2px;transition:width 1s linear;"></div>
                                 </div>
                                 <div style="display:flex;justify-content:space-between;margin-bottom:32px;">
-                                    <span id="fullTimeJ" style="font-size:11px;color:#3a3a42">0:00</span>
-                                    <span id="fullDurJ" style="font-size:11px;color:#3a3a42">0:00</span>
+                                    <span id="fullTimeJ" style="font-size:11px;color:#55608c">0:00</span>
+                                    <span id="fullDurJ" style="font-size:11px;color:#55608c">0:00</span>
                                 </div>
 
                                 <!-- Controls -->
                                 <div style="display:flex;align-items:center;gap:20px;margin-bottom:32px;">
-                                    <button onclick="prevTrack()" style="background:#1a2038;border:1px solid #24242a;color:#eef1f9;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:20px;transition:all 0.2s;" onmouseover="this.style.background='#24242a'" onmouseout="this.style.background='#1a2038'">⏮</button>
-                                    <button onclick="toggleMusicPlay()" id="fullPlayBtnJ" style="background:#1DB954;border:none;color:#000;width:68px;height:68px;border-radius:50%;cursor:pointer;font-size:28px;transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">⏸</button>
-                                    <button onclick="skipTrack()" style="background:#1a2038;border:1px solid #24242a;color:#eef1f9;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:20px;transition:all 0.2s;" onmouseover="this.style.background='#24242a'" onmouseout="this.style.background='#1a2038'">⏭</button>
-                                    <button onclick="hideAllPanels();openMusicMode();document.getElementById(\'avatarBundleJ\').style.transform=\'\'" style="background:#1a2038;border:1px solid #24242a;color:#8a8a95;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:16px;margin-left:auto;">⊞</button>
+                                    <button onclick="prevTrack()" style="background:#1a2038;border:1px solid #33447a;color:#c9d0ff;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:20px;transition:all 0.2s;" onmouseover="this.style.background='#232a4a'" onmouseout="this.style.background='#1a2038'">⏮</button>
+                                    <button onclick="toggleMusicPlay()" id="fullPlayBtnJ" style="background:#1DB954;border:none;color:#000;width:68px;height:68px;border-radius:50%;cursor:pointer;font-size:28px;transition:transform 0.15s;box-shadow:0 0 18px rgba(29,185,84,0.4);" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">⏸</button>
+                                    <button onclick="skipTrack()" style="background:#1a2038;border:1px solid #33447a;color:#c9d0ff;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:20px;transition:all 0.2s;" onmouseover="this.style.background='#232a4a'" onmouseout="this.style.background='#1a2038'">⏭</button>
+                                    <button onclick="hideAllPanels();openMusicMode();document.getElementById(\'avatarBundleJ\').style.transform=\'\'" style="background:#1a2038;border:1px solid #33447a;color:#8a93b8;width:52px;height:52px;border-radius:50%;cursor:pointer;font-size:16px;margin-left:auto;">⊞</button>
                                 </div>
 
                                 <!-- Volume -->
-                                <div style="font-size:10px;color:#3a3a42;letter-spacing:3px;margin-bottom:10px">LAUTSTÄRKE</div>
+                                <div style="font-size:10px;color:#5566cc;letter-spacing:3px;margin-bottom:10px">◈ LAUTSTÄRKE</div>
                                 <input type="range" min="0" max="100" value="70" id="spotifyVolumeJ" oninput="setSpotifyVolume(this.value)" style="width:100%;accent-color:#1DB954;cursor:pointer;height:4px;"/>
                             </div>
                         </foreignObject>
@@ -2136,13 +2166,14 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
                 const timeStr = t.finished ? 'FERTIG!' : fmtTimer(remaining);
                 const timeCol = t.finished ? '#f39c12' : '#EEF1F9';
                 return `<g>
-                    <rect x="${x}" y="${y}" width="${W}" height="${H}" rx="16" fill="#0d1018" stroke="${t.finished ? '#f39c12' : '#33447a'}" stroke-width="1.5"/>
+                    <rect x="${x}" y="${y}" width="${W}" height="${H}" rx="14" fill="#0b0e18" stroke="${t.finished ? '#f39c12' : '#33447a'}" stroke-width="1.5"/>
                     <rect x="${x}" y="${y}" width="${W}" height="3" rx="1.5" fill="url(#neonLineJ)"/>
-                    <text x="${x + W/2}" y="${y + 44}" text-anchor="middle" style="font-size:14px;fill:#838fb8;letter-spacing:2px">⏱ ${t.name.toUpperCase()}</text>
+                    <path d="M ${x+12} ${y+24} L ${x+12} ${y+12} L ${x+24} ${y+12} M ${x+W-12} ${y+H-24} L ${x+W-12} ${y+H-12} L ${x+W-24} ${y+H-12}" fill="none" stroke="#9b6ce0" stroke-width="1.4" opacity="0.8"/>
+                    <text x="${x + W/2}" y="${y + 44}" text-anchor="middle" style="font-size:13px;fill:#838fb8;letter-spacing:3px">◈ ${t.name.toUpperCase()}</text>
                     <text x="${x + W/2}" y="${y + 126}" text-anchor="middle" style="font-size:${t.finished ? 40 : 54}px;fill:${timeCol};font-weight:700">${timeStr}</text>
                     <rect x="${x + 34}" y="${y + 162}" width="${W - 68}" height="6" rx="3" fill="#1a2038"/>
-                    <rect x="${x + 34}" y="${y + 162}" width="${Math.max(0, (W - 68) * frac)}" height="6" rx="3" fill="#5566cc"/>
-                    <text x="${x + W/2}" y="${y + 202}" text-anchor="middle" style="font-size:12px;fill:#55608c">${t.finished ? 'abgelaufen' : 'endet ' + fmtEnd(t)}</text>
+                    <rect x="${x + 34}" y="${y + 162}" width="${Math.max(0, (W - 68) * frac)}" height="6" rx="3" fill="url(#coreRingGradJ)"/>
+                    <text x="${x + W/2}" y="${y + 202}" text-anchor="middle" style="font-size:11px;fill:#55608c;letter-spacing:2px">${t.finished ? 'ABGELAUFEN' : 'ENDET ' + fmtEnd(t)}</text>
                 </g>`;
             }).join('');
         }
@@ -2244,20 +2275,20 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             });
             if (current) lines.push(current);
 
-            // Leere Textzeilen anlegen — werden Zeichen für Zeichen gefüllt
+            // Leere Textzeilen anlegen — werden Zeichen für Zeichen gefüllt (Terminal-Stil)
             const textEls = lines.map((_, i) => {
                 const t = document.createElementNS(svgNS, 'text');
-                t.setAttribute('x', '710'); t.setAttribute('y', 250 + i * 28);
-                t.setAttribute('style', "font-size:18px; font-family:'Comic Sans MS', cursive, sans-serif; fill:#3A2E0A; font-weight:600;");
+                t.setAttribute('x', '696'); t.setAttribute('y', 268 + i * 28);
+                t.setAttribute('style', "font-size:17px; font-family:Consolas,'Courier New',monospace; fill:#c9d0ff;");
                 group.appendChild(t);
                 return t;
             });
 
-            // Schreibender Stift
+            // Blinkender Terminal-Cursor
             const pen = document.createElementNS(svgNS, 'text');
-            pen.textContent = '✏️';
-            pen.setAttribute('x', '710'); pen.setAttribute('y', 246);
-            pen.setAttribute('style', 'font-size:26px;');
+            pen.textContent = '▌';
+            pen.setAttribute('x', '696'); pen.setAttribute('y', 268);
+            pen.setAttribute('style', 'font-size:17px;fill:#9b6ce0;animation:cursorBlinkN 0.9s step-end infinite;');
             group.appendChild(pen);
 
             const noteGroup = document.getElementById('noteGroupN');
@@ -2275,20 +2306,20 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
                 if (li >= lines.length) {
                     clearInterval(noteTypeTimerN);
                     pen.remove();
-                    // Stempel "✓ GESPEICHERT" knallt aufs Papier
+                    // HUD-Bestätigung "✓ GESPEICHERT"
                     const stamp = document.createElementNS(svgNS, 'g');
-                    stamp.setAttribute('transform', 'translate(950,438) rotate(-8)');
+                    stamp.setAttribute('transform', 'translate(950,438)');
                     stamp.innerHTML = `<g style="animation:stampInJ 0.45s cubic-bezier(0.2,1.4,0.4,1) 0.15s both;transform-box:fill-box;transform-origin:center">
-                        <rect x="-82" y="-19" width="164" height="38" rx="6" fill="none" stroke="#C0392B" stroke-width="3.5"/>
-                        <text x="0" y="7" text-anchor="middle" style="font-size:16px;fill:#C0392B;font-weight:800;letter-spacing:2px">✓ GESPEICHERT</text>
+                        <rect x="-78" y="-17" width="156" height="34" rx="6" fill="rgba(78,201,154,0.1)" stroke="#4ec99a" stroke-width="1.5"/>
+                        <text x="0" y="6" text-anchor="middle" style="font-size:14px;fill:#4ec99a;font-weight:700;letter-spacing:2px">✓ GESPEICHERT</text>
                     </g>`;
                     group.appendChild(stamp);
-                    // Funkeln rund um den Zettel
-                    [[688, 208], [1026, 222], [672, 428], [1032, 400], [858, 178]].forEach(([x, y], i) => {
+                    // Holo-Glints rund um das Pad
+                    [[688, 208], [1026, 222], [672, 428], [1032, 400], [858, 182]].forEach(([x, y], i) => {
                         const s = document.createElementNS(svgNS, 'text');
-                        s.textContent = '✨';
+                        s.textContent = '✦';
                         s.setAttribute('x', x); s.setAttribute('y', y);
-                        s.setAttribute('style', `font-size:22px;animation:sparklePopJ 1s ease ${0.3 + 0.12 * i}s both;transform-box:fill-box;transform-origin:center`);
+                        s.setAttribute('style', `font-size:20px;fill:#9b6ce0;animation:sparklePopJ 1s ease ${0.3 + 0.12 * i}s both;transform-box:fill-box;transform-origin:center`);
                         group.appendChild(s);
                         setTimeout(() => s.remove(), 2200);
                     });
@@ -2296,8 +2327,8 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
                 }
                 ci++;
                 textEls[li].textContent = lines[li].slice(0, ci);
-                pen.setAttribute('x', Math.min(710 + ci * 10.5, 1020));
-                pen.setAttribute('y', 246 + li * 28);
+                pen.setAttribute('x', Math.min(696 + ci * 9.4, 1028));
+                pen.setAttribute('y', 268 + li * 28);
                 if (ci >= lines[li].length) { li++; ci = 0; }
             }, 42);
 
@@ -2321,26 +2352,17 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             container.innerHTML = '';
             if (savedNotes.length === 0) {
                 container.style.cssText = 'flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;';
-                container.innerHTML = '<div style="text-align:center;color:#3a3a42;margin-top:40px;font-size:14px;">Keine Notizen vorhanden.<br><br>Befehl: "notiz Milch kaufen"</div>';
+                container.innerHTML = '<div style="text-align:center;color:#55608c;margin-top:40px;font-size:13px;letter-spacing:1px;">Keine Einträge im Archiv.<br><br>Befehl: "notiz Milch kaufen"</div>';
                 return;
             }
-            // Pinnwand: bunte Haftnotizen im Raster
-            container.style.cssText = 'flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px;align-content:start;padding:10px 6px 6px;';
-            const noteColors = [
-                ['#F2DD6B', '#5c521c'], // gelb
-                ['#F5A8C0', '#6b2340'], // pink
-                ['#9FD8F5', '#1d4a63'], // blau
-                ['#B8EDA8', '#2c5c1e'], // grün
-                ['#E8C49A', '#5c3c1a'], // orange
-                ['#D3B8F0', '#43246b'], // lila
-            ];
+            // HUD-Datenkarten im Raster
+            container.style.cssText = 'flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;align-content:start;padding:4px 6px 6px;';
             savedNotes.forEach((note, i) => {
-                const [bg, ink] = noteColors[i % noteColors.length];
-                const rot = [-2.5, 2, -1.5, 2.5, -2, 1.5][i % 6];
                 const safeText = String(note.text).replace(/&/g, '&amp;').replace(/</g, '&lt;');
                 const isReminder = !!note.remindAt;
+                const accent = isReminder && !note.done ? '#e8b24a' : '#7d63d8';
                 const div = document.createElement('div');
-                div.style.cssText = `background:${bg};border-radius:2px 2px 16px 2px;padding:24px 14px 12px;position:relative;transform:rotate(${rot}deg);box-shadow:3px 6px 14px rgba(0,0,0,0.5);animation:notePopN 0.45s cubic-bezier(0.34,1.56,0.64,1) both;animation-delay:${i * 0.07}s;min-height:120px;display:flex;flex-direction:column;${note.done ? 'opacity:0.55;' : ''}`;
+                div.style.cssText = `position:relative;background:linear-gradient(160deg,rgba(18,22,38,0.95),rgba(11,14,24,0.95));border:1px solid ${isReminder && !note.done ? 'rgba(232,178,74,0.45)' : '#33447a'};border-left:3px solid ${accent};border-radius:10px;padding:12px 14px;min-height:110px;display:flex;flex-direction:column;animation:notePopN 0.4s cubic-bezier(0.34,1.56,0.64,1) both;animation-delay:${i * 0.05}s;${note.done ? 'opacity:0.5;' : ''}`;
                 // Erinnerungs-Notiz: Fälligkeit mit Datum + Uhrzeit anzeigen
                 let reminderBadge = '';
                 if (isReminder) {
@@ -2348,16 +2370,16 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
                     const dueStr = due.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit'}) + ' · ' +
                                    due.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'});
                     reminderBadge = note.done
-                        ? `<div style="font-size:11px;font-weight:700;color:${ink};background:rgba(0,0,0,0.1);border-radius:6px;padding:3px 8px;margin-bottom:6px;display:inline-block;">✓ erinnert (${dueStr})</div>`
-                        : `<div style="font-size:11px;font-weight:700;color:#8a2f10;background:rgba(255,255,255,0.45);border-radius:6px;padding:3px 8px;margin-bottom:6px;display:inline-block;">⏰ ${dueStr} Uhr</div>`;
+                        ? `<div style="font-size:10px;font-weight:700;color:#4ec99a;background:rgba(78,201,154,0.12);border:1px solid rgba(78,201,154,0.35);border-radius:6px;padding:2px 8px;margin-bottom:8px;display:inline-block;align-self:flex-start;">✓ erinnert (${dueStr})</div>`
+                        : `<div style="font-size:10px;font-weight:700;color:#e8b24a;background:rgba(232,178,74,0.12);border:1px solid rgba(232,178,74,0.35);border-radius:6px;padding:2px 8px;margin-bottom:8px;display:inline-block;align-self:flex-start;">⏰ ${dueStr} Uhr</div>`;
                 }
                 div.innerHTML = `
-                    <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%) rotate(${-rot * 2}deg);font-size:22px;filter:drop-shadow(0 2px 2px rgba(0,0,0,0.35))">${isReminder ? '⏰' : '📌'}</div>
+                    <div style="font-size:9px;letter-spacing:2px;color:${accent};margin-bottom:7px;">${isReminder ? '⏰ ERINNERUNG' : '◈ NOTIZ'} · #${i + 1}</div>
                     ${reminderBadge}
-                    <div style="flex:1;font-family:'Segoe Print','Comic Sans MS',cursive;font-size:14px;line-height:1.5;color:${ink};overflow-wrap:break-word;${note.done ? 'text-decoration:line-through;' : ''}">${safeText}</div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;border-top:1px dashed rgba(0,0,0,0.15);padding-top:8px;">
-                        <span style="font-size:10px;color:${ink};opacity:0.6;font-weight:600;">#${i + 1} · ${note.time}</span>
-                        <button onclick="deleteNote(${i})" style="background:rgba(0,0,0,0.12);border:none;border-radius:6px;padding:3px 9px;cursor:pointer;font-size:12px;">🗑</button>
+                    <div style="flex:1;font-size:13px;line-height:1.5;color:#dfe4f5;overflow-wrap:break-word;${note.done ? 'text-decoration:line-through;' : ''}">${safeText}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;border-top:1px solid rgba(51,68,122,0.5);padding-top:7px;">
+                        <span style="font-size:10px;color:#55608c;letter-spacing:1px;">${note.time}</span>
+                        <button onclick="deleteNote(${i})" style="background:rgba(85,102,204,0.15);border:1px solid #33447a;color:#8a93b8;border-radius:6px;padding:2px 9px;cursor:pointer;font-size:11px;">🗑</button>
                     </div>`;
                 container.appendChild(div);
             });
@@ -4398,6 +4420,55 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             setLabelJ('Rechenzentrum', `${expr} = ${result}`);
             jarvisSpeak(`${expr} ergibt ${result}`);
         }
+
+        // ── Demo-/Vorschau-Modus über URL-Hash (#demo=timer|timers|note|notes|musik|musikfull|lichter)
+        //    Öffnet ein Panel mit Beispieldaten, ohne echte Sprachausgabe oder Speicherung.
+        (function () {
+            const demo = new URLSearchParams(location.hash.slice(1)).get('demo');
+            if (!demo) return;
+            // Keine Mikrofon-Anfrage im Demo-Modus (blockiert sonst Screenshot-Vorschauen)
+            try { window.SpeechRecognition = undefined; window.webkitSpeechRecognition = undefined; } catch (e) {}
+            setTimeout(() => {
+                window.jarvisSpeak = () => {};
+                window.saveNotesToStorage = () => {};
+                hideAllPanels();
+                showJ('idleScreenJ', 0); showJ('idleScreen2J', 0); showJ('idleDotsJ', 0);
+                showJ('focusScreenJ', 1);
+                if (demo === 'timer' || demo === 'timers') {
+                    openTimerMode(423);
+                    if (demo === 'timers') { openTimerMode(1500); openTimerMode(75); }
+                    // Anzeige nach 1 s einfrieren (stabiler Frame für Screenshots)
+                    setTimeout(() => {
+                        window.renderMultiTimers = () => {};
+                        window.updateSingleTimerScreen = () => {};
+                        window.updateIdleTimerWidget = () => {};
+                    }, 1000);
+                }
+                else if (demo === 'note') { openNoteMode('Einkauf: Milch, Brot und Eier nicht vergessen'); }
+                else if (demo === 'notes') {
+                    savedNotes = [
+                        { text: 'Zahnarzttermin ausmachen', time: '09:14' },
+                        { text: 'Mama anrufen wegen Wochenende', time: '11:32', remindAt: Date.now() + 86400000 },
+                        { text: 'Geschenk für Leon besorgen', time: '14:05' },
+                        { text: 'Müll rausbringen', time: '18:20', remindAt: Date.now() - 3600000, done: true }
+                    ];
+                    openNotesListMode();
+                }
+                else if (demo === 'musik') { openMusicMode(); }
+                else if (demo === 'musikfull') {
+                    showJ('musicFullModeJ', 1);
+                    document.getElementById('fullTitleJ').textContent = 'Blinding Lights';
+                    document.getElementById('fullArtistJ').textContent = 'The Weeknd';
+                    document.getElementById('fullAlbumJ').textContent = 'After Hours';
+                }
+                else if (demo === 'lichter') {
+                    window.getGoveeKey = () => 'demo';
+                    window.loadGoveeDevices = async () => {};
+                    goveeDevices = [{ deviceName: 'Wohnzimmer Strip', sku: 'H6159' }, { deviceName: 'Schreibtisch Bar', sku: 'H6008' }];
+                    openLedControlWindow();
+                }
+            }, 700);
+        })();
 
     </script>
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
