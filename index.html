@@ -1377,7 +1377,7 @@
             // iOS: Mikrofon & Ton brauchen einen Fingertipp → Hinweis-Button zeigen.
             // In-App-Browser (WebFrame): Warnung, dass nur Safari Sprache kann.
             // Desktop: direkt lauschen; der erste Klick schaltet zusätzlich den Ton frei.
-            if (IS_IOS_WEBVIEW || IS_IOS) showVoiceActivateHint();
+            if (IS_IOS_WEBVIEW || IS_IOS || IS_EMBEDDED_FRAME) showVoiceActivateHint();
             else startWakeWord();
             document.addEventListener('pointerdown', ev => {
                 if (!voiceUnlocked && ev.target.id !== 'voiceActivateJ') activateVoice();
@@ -3662,6 +3662,12 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
         const IS_STANDALONE = window.navigator.standalone === true
                            || window.matchMedia('(display-mode: standalone)').matches;
         const IS_IOS_WEBVIEW = IS_IOS && (IS_STANDALONE || !/Safari\//i.test(navigator.userAgent));
+        // In einem iframe eingebettet (z. B. HA-Lovelace "Webpage"-Karte, Vorschau-Tools):
+        // Browser blockieren Mikrofon dort ohne explizites allow="microphone" meist ohnehin
+        // stumm oder mit Prompt-Spam. Statt beim Laden ungefragt zuzugreifen, erst auf
+        // Fingertipp/Klick warten (nutzt den bestehenden "Tippen & Jarvis sagen"-Hinweis).
+        let IS_EMBEDDED_FRAME = false;
+        try { IS_EMBEDDED_FRAME = window.self !== window.top; } catch (e) { IS_EMBEDDED_FRAME = true; }
 
         function showVoiceActivateHint() {
             const b = document.getElementById('voiceActivateJ');
@@ -4423,11 +4429,20 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
 
         // ── Demo-/Vorschau-Modus über URL-Hash (#demo=timer|timers|note|notes|musik|musikfull|lichter)
         //    Öffnet ein Panel mit Beispieldaten, ohne echte Sprachausgabe oder Speicherung.
+        // ── #nomic  → unterdrückt nur die Mikrofon-Anfrage (für Vorschau-/Screenshot-Tools,
+        //    die getUserMedia blockieren), Rest der Seite läuft normal weiter.
         (function () {
-            const demo = new URLSearchParams(location.hash.slice(1)).get('demo');
+            const params = new URLSearchParams(location.hash.slice(1));
+            const demo = params.get('demo');
+            if (params.has('nomic') || demo) {
+                // Plain assignment scheitert lautlos, da beide Namen nur als getter-only
+                // Accessor auf Window.prototype existieren — daher als eigene Shadow-Property
+                // mit definierbarem Wert überschreiben.
+                ['SpeechRecognition', 'webkitSpeechRecognition'].forEach(name => {
+                    try { Object.defineProperty(window, name, { value: undefined, configurable: true }); } catch (e) {}
+                });
+            }
             if (!demo) return;
-            // Keine Mikrofon-Anfrage im Demo-Modus (blockiert sonst Screenshot-Vorschauen)
-            try { window.SpeechRecognition = undefined; window.webkitSpeechRecognition = undefined; } catch (e) {}
             setTimeout(() => {
                 window.jarvisSpeak = () => {};
                 window.saveNotesToStorage = () => {};
