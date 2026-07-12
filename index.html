@@ -829,18 +829,21 @@
 
                     <!-- EXTRA WETTER ANSICHT -->
                     <g id="detailWeatherModeJ" class="fadeFastJ" opacity="0" style="visibility:hidden">
-                        <!-- Wetter-Panel (breit) -->
+                        <!-- Wetter-Panel (breit, HUD) -->
                         <rect x="474" y="60" width="762" height="588" rx="14" fill="#0d1018" stroke="#33447a" stroke-width="1.5"/>
                         <rect x="474" y="60" width="762" height="3" rx="1.5" fill="url(#neonLineJ)"/>
-                        <path d="M 474 76 L 474 60 L 490 60 M 1236 632 L 1236 648 L 1220 648" fill="none" stroke="#5566cc" stroke-width="1.5" opacity="0.7"/>
-                        <text x="1214" y="90" text-anchor="end" style="font-size:10px;fill:#5566cc;letter-spacing:4px">◈ WETTERSTATION</text>
+                        <rect x="474" y="60" width="762" height="588" rx="14" fill="url(#coreGlowJ)" opacity="0.04"/>
+                        <path d="M 474 76 L 474 60 L 490 60 M 1236 632 L 1236 648 L 1220 648" fill="none" stroke="#9b6ce0" stroke-width="1.6" opacity="0.85"/>
+                        <text x="1214" y="76" text-anchor="end" style="font-size:9px;fill:#5566cc;letter-spacing:3px">◈ WETTERSTATION</text>
 
-                        <!-- Figur mit Regenschirm -->
+                        <!-- Holo-Emblem -->
                         <g transform="translate(122,40) scale(0.85)"><use href="#holoAvatarJ"/></g>
 
                         <!-- Kopf: Stadt + Haupttemperatur -->
-                        <text id="detWeatherCityJ" x="556" y="112" style="font-size:24px; fill:#EEF1F9; font-weight:600;">Dachau</text>
-                        <text id="detWeatherDayJ" x="556" y="136" style="font-size:13px; fill:#838fb8;">Dienstag</text>
+                        <rect x="556" y="92" width="3" height="44" rx="1.5" fill="#5566cc" filter="url(#eyeGlowJ)"/>
+                        <text id="detWeatherCityJ" x="572" y="112" style="font-size:24px; fill:#EEF1F9; font-weight:600;">Dachau</text>
+                        <text id="detWeatherDayJ" x="572" y="136" style="font-size:13px; fill:#838fb8;">Dienstag</text>
+                        <circle cx="576" cy="192" r="48" fill="url(#coreGlowJ)" opacity="0.4"/>
                         <text id="detWeatherIconJ" x="576" y="212" text-anchor="middle" style="font-size:56px;">⛅</text>
                         <text id="detWeatherTempJ" x="626" y="212" style="font-size:76px; fill:#EEF1F9; font-weight:600;">32°</text>
                         <text id="detWeatherDescJ" x="558" y="244" style="font-size:15px; fill:#a6b2dc;">Heiter</text>
@@ -853,30 +856,54 @@
                         <!-- Metriken-Reihe -->
                         <g font-family="inherit">
                             <rect x="556" y="288" width="152" height="96" rx="14" fill="#10141f" stroke="#33447a" stroke-width="1"/>
+                            <rect x="556" y="288" width="152" height="3" rx="1.5" fill="url(#coreRingGradJ)"/>
+                            <path d="M566,310 L566,298 L578,298 M698,374 L698,362 L686,362" fill="none" stroke="#9b6ce0" stroke-width="1.3" opacity="0.75"/>
                             <text x="574" y="312" style="font-size:11px;fill:#838fb8;">💧 Luftfeuchte</text>
-                            <text id="detHumidityJ" x="574" y="352" style="font-size:30px;fill:#EEF1F9;font-weight:600;">–</text>
+                            <text id="detHumidityJ" x="574" y="350" style="font-size:28px;fill:#EEF1F9;font-weight:600;">–</text>
+                            <rect x="574" y="366" width="116" height="4" rx="2" fill="#1a2038"/>
+                            <rect id="detHumidityBarJ" x="574" y="366" width="0" height="4" rx="2" fill="url(#coreRingGradJ)"/>
+
                             <rect x="720" y="288" width="152" height="96" rx="14" fill="#10141f" stroke="#33447a" stroke-width="1"/>
+                            <rect x="720" y="288" width="152" height="3" rx="1.5" fill="url(#coreRingGradJ)"/>
+                            <path d="M730,310 L730,298 L742,298 M862,374 L862,362 L850,362" fill="none" stroke="#9b6ce0" stroke-width="1.3" opacity="0.75"/>
                             <text x="738" y="312" style="font-size:11px;fill:#838fb8;">🌬️ Wind</text>
-                            <text id="detWindJ" x="738" y="352" style="font-size:30px;fill:#EEF1F9;font-weight:600;">–</text>
+                            <text id="detWindJ" x="738" y="358" style="font-size:22px;fill:#EEF1F9;font-weight:600;">–</text>
+                            <circle cx="846" cy="348" r="18" fill="#0b0e18" stroke="#33447a" stroke-width="1"/>
+                            <text x="846" y="336" text-anchor="middle" style="font-size:7px;fill:#5566cc;font-weight:700">N</text>
+                            <g id="detWindNeedleJ" transform="rotate(0 846 348)">
+                                <line x1="846" y1="348" x2="846" y2="335" stroke="#9b6ce0" stroke-width="2" stroke-linecap="round" filter="url(#coreBlurJ)"/>
+                                <circle cx="846" cy="348" r="2.4" fill="#c9d0ff"/>
+                            </g>
+
                             <rect x="884" y="288" width="152" height="96" rx="14" fill="#10141f" stroke="#33447a" stroke-width="1"/>
+                            <rect x="884" y="288" width="152" height="3" rx="1.5" fill="url(#coreRingGradJ)"/>
+                            <path d="M894,310 L894,298 L906,298 M1026,374 L1026,362 L1014,362" fill="none" stroke="#9b6ce0" stroke-width="1.3" opacity="0.75"/>
                             <text x="902" y="312" style="font-size:11px;fill:#838fb8;">🧭 Druck</text>
-                            <text id="detPressureJ" x="902" y="352" style="font-size:30px;fill:#EEF1F9;font-weight:600;">–</text>
+                            <text id="detPressureJ" x="902" y="352" style="font-size:28px;fill:#EEF1F9;font-weight:600;">–</text>
+
                             <rect x="1048" y="288" width="166" height="96" rx="14" fill="#10141f" stroke="#33447a" stroke-width="1"/>
+                            <rect x="1048" y="288" width="166" height="3" rx="1.5" fill="url(#coreRingGradJ)"/>
+                            <path d="M1058,310 L1058,298 L1070,298 M1204,374 L1204,362 L1192,362" fill="none" stroke="#9b6ce0" stroke-width="1.3" opacity="0.75"/>
                             <text x="1066" y="312" style="font-size:11px;fill:#838fb8;">👁️ Sicht</text>
-                            <text id="detVisibilityJ" x="1066" y="352" style="font-size:30px;fill:#EEF1F9;font-weight:600;">–</text>
+                            <text id="detVisibilityJ" x="1066" y="352" style="font-size:28px;fill:#EEF1F9;font-weight:600;">–</text>
                         </g>
 
-                        <!-- Sonnenaufgang / -untergang -->
+                        <!-- Sonnenverlauf (Bogen-Gauge) -->
                         <rect x="556" y="398" width="252" height="108" rx="14" fill="#10141f" stroke="#33447a" stroke-width="1"/>
-                        <text x="574" y="422" style="font-size:11px;fill:#838fb8;letter-spacing:1px;">SONNE</text>
-                        <text x="592" y="466" text-anchor="middle" style="font-size:26px;">🌅</text>
-                        <text id="detSunriseJ" x="622" y="462" style="font-size:20px;fill:#EEF1F9;font-weight:600;">06:02</text>
-                        <text x="592" y="494" text-anchor="middle" style="font-size:26px;">🌇</text>
-                        <text id="detSunsetJ" x="622" y="490" style="font-size:20px;fill:#EEF1F9;font-weight:600;">21:18</text>
-                        <text id="detWeatherRainJ" x="790" y="422" text-anchor="end" style="font-size:11px;fill:#378ADD;">☔ 0%</text>
+                        <rect x="556" y="398" width="252" height="3" rx="1.5" fill="url(#coreRingGradJ)"/>
+                        <path d="M566,420 L566,408 L578,408 M798,494 L798,482 L786,482" fill="none" stroke="#9b6ce0" stroke-width="1.3" opacity="0.75"/>
+                        <text x="574" y="418" style="font-size:11px;fill:#838fb8;letter-spacing:1px;">☀ SONNENVERLAUF</text>
+                        <text id="detWeatherRainJ" x="790" y="418" text-anchor="end" style="font-size:11px;fill:#378ADD;">☔ 0%</text>
+                        <path d="M 640 468 A 42 42 0 0 1 724 468" fill="none" stroke="#1a2038" stroke-width="4"/>
+                        <path id="detSunProgressArcJ" d="" fill="none" stroke="url(#coreRingGradJ)" stroke-width="4" stroke-linecap="round"/>
+                        <circle id="detSunDotJ" cx="640" cy="468" r="6" fill="url(#coreGlowJ)" filter="url(#coreBlurJ)"/>
+                        <text id="detSunriseJ" x="628" y="498" text-anchor="middle" style="font-size:12px;fill:#EEF1F9;font-weight:600;">06:02</text>
+                        <text id="detSunsetJ" x="736" y="498" text-anchor="middle" style="font-size:12px;fill:#EEF1F9;font-weight:600;">21:18</text>
 
                         <!-- Luftqualität-Gauge -->
                         <rect x="820" y="398" width="180" height="108" rx="14" fill="#10141f" stroke="#33447a" stroke-width="1"/>
+                        <rect x="820" y="398" width="180" height="3" rx="1.5" fill="url(#coreRingGradJ)"/>
+                        <path d="M830,420 L830,408 L842,408 M990,494 L990,482 L978,482" fill="none" stroke="#9b6ce0" stroke-width="1.3" opacity="0.75"/>
                         <text x="838" y="422" style="font-size:11px;fill:#838fb8;letter-spacing:1px;">LUFTQUALITÄT</text>
                         <circle cx="866" cy="466" r="26" fill="none" stroke="#1a2038" stroke-width="6"/>
                         <circle id="detAirGaugeJ" cx="866" cy="466" r="26" fill="none" stroke="#4ec99a" stroke-width="6" stroke-linecap="round" stroke-dasharray="163" stroke-dashoffset="120" transform="rotate(-90 866 466)"/>
@@ -886,22 +913,30 @@
 
                         <!-- Pollen -->
                         <rect x="1012" y="398" width="202" height="108" rx="14" fill="#10141f" stroke="#33447a" stroke-width="1"/>
+                        <rect x="1012" y="398" width="202" height="3" rx="1.5" fill="url(#coreRingGradJ)"/>
+                        <path d="M1022,420 L1022,408 L1034,408 M1204,494 L1204,482 L1192,482" fill="none" stroke="#9b6ce0" stroke-width="1.3" opacity="0.75"/>
                         <text x="1030" y="422" style="font-size:11px;fill:#838fb8;letter-spacing:1px;">🌼 POLLENFLUG</text>
                         <text id="detPollenJ" x="1030" y="464" style="font-size:26px;fill:#b4b4bd;font-weight:700;">—</text>
                         <text id="detPollenValJ" x="1030" y="488" style="font-size:11px;fill:#55608c;"></text>
 
-                        <!-- UV-Index -->
+                        <!-- UV-Index (Ring-Gauge) & gefühlte Temperatur -->
                         <rect x="556" y="520" width="658" height="112" rx="14" fill="#10141f" stroke="#33447a" stroke-width="1"/>
+                        <rect x="556" y="520" width="658" height="3" rx="1.5" fill="url(#coreRingGradJ)"/>
+                        <path d="M566,542 L566,530 L578,530 M1204,622 L1204,610 L1192,610" fill="none" stroke="#9b6ce0" stroke-width="1.3" opacity="0.75"/>
                         <text x="574" y="544" style="font-size:11px;fill:#838fb8;letter-spacing:1px;">☀️ UV-INDEX &amp; GEFÜHLTE TEMPERATUR</text>
-                        <text id="detUvJ" x="620" y="596" text-anchor="middle" style="font-size:38px;fill:#f39c12;font-weight:700;">–</text>
+                        <circle cx="620" cy="582" r="34" fill="none" stroke="#1a2038" stroke-width="6"/>
+                        <circle id="detUvGaugeJ" cx="620" cy="582" r="34" fill="none" stroke="#f39c12" stroke-width="6" stroke-linecap="round" stroke-dasharray="214" stroke-dashoffset="214" transform="rotate(-90 620 582)"/>
+                        <text id="detUvJ" x="620" y="590" text-anchor="middle" style="font-size:34px;fill:#f39c12;font-weight:700;">–</text>
                         <text x="620" y="618" text-anchor="middle" style="font-size:11px;fill:#838fb8;">UV</text>
                         <line x1="720" y1="548" x2="720" y2="612" stroke="#33447a" stroke-width="1"/>
                         <text id="detFeelsJ" x="800" y="596" text-anchor="middle" style="font-size:38px;fill:#EEF1F9;font-weight:600;">–</text>
                         <text x="800" y="618" text-anchor="middle" style="font-size:11px;fill:#838fb8;">gefühlt</text>
-                        <text id="detWeatherMaxJ" x="980" y="580" text-anchor="middle" style="font-size:24px;fill:#f39c12;font-weight:700;">–</text>
-                        <text x="980" y="600" text-anchor="middle" style="font-size:10px;fill:#838fb8;">HOCH</text>
-                        <text id="detWeatherMinJ" x="1120" y="580" text-anchor="middle" style="font-size:24px;fill:#a6b2dc;font-weight:700;">–</text>
-                        <text x="1120" y="600" text-anchor="middle" style="font-size:10px;fill:#838fb8;">TIEF</text>
+                        <rect x="944" y="562" width="76" height="46" rx="10" fill="#0b0e18" stroke="#33447a" stroke-width="1"/>
+                        <text x="982" y="578" text-anchor="middle" style="font-size:9px;fill:#f39c12;">▲ HOCH</text>
+                        <text id="detWeatherMaxJ" x="982" y="600" text-anchor="middle" style="font-size:20px;fill:#f39c12;font-weight:700;">–</text>
+                        <rect x="1084" y="562" width="76" height="46" rx="10" fill="#0b0e18" stroke="#33447a" stroke-width="1"/>
+                        <text x="1122" y="578" text-anchor="middle" style="font-size:9px;fill:#a6b2dc;">▼ TIEF</text>
+                        <text id="detWeatherMinJ" x="1122" y="600" text-anchor="middle" style="font-size:20px;fill:#a6b2dc;font-weight:700;">–</text>
                     </g>
 
                     <!-- WIKIPEDIA / KNOWLEDGE BASE ("WAS IST...") -->
@@ -2615,14 +2650,33 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
                 setD('detWeatherDescJ', data.weather[0].description);
                 // Metriken
                 setD('detHumidityJ', `${data.main.humidity}%`);
+                const humBar = document.getElementById('detHumidityBarJ');
+                if (humBar) humBar.setAttribute('width', Math.max(0, Math.min(116, 116 * data.main.humidity / 100)));
                 setD('detWindJ', `${Math.round((data.wind?.speed || 0) * 3.6)} km/h`);
+                const needle = document.getElementById('detWindNeedleJ');
+                if (needle) needle.setAttribute('transform', `rotate(${data.wind?.deg || 0} 846 348)`);
                 setD('detPressureJ', `${data.main.pressure} hPa`);
                 setD('detVisibilityJ', `${((data.visibility || 0) / 1000).toFixed(1)} km`);
                 setD('detFeelsJ', `${Math.round(data.main.feels_like)}°`);
-                // Sonne
+                // Sonnenverlauf: Bogen-Gauge von Sonnenaufgang (links) über Mittag (oben) bis Sonnenuntergang (rechts)
                 const fmtSun = ts => new Date(ts * 1000).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
                 if (data.sys?.sunrise) setD('detSunriseJ', fmtSun(data.sys.sunrise));
                 if (data.sys?.sunset) setD('detSunsetJ', fmtSun(data.sys.sunset));
+                if (data.sys?.sunrise && data.sys?.sunset) {
+                    const sunCX = 682, sunCY = 468, sunR = 42;
+                    const now = Date.now() / 1000;
+                    const frac = Math.max(0, Math.min(1, (now - data.sys.sunrise) / (data.sys.sunset - data.sys.sunrise)));
+                    const angleDeg = -90 + frac * 180;
+                    const rad = (angleDeg - 90) * Math.PI / 180;
+                    const sunX = sunCX + sunR * Math.cos(rad);
+                    const sunY = sunCY + sunR * Math.sin(rad);
+                    const dot = document.getElementById('detSunDotJ');
+                    if (dot) { dot.setAttribute('cx', sunX); dot.setAttribute('cy', sunY); }
+                    const arc = document.getElementById('detSunProgressArcJ');
+                    if (arc) arc.setAttribute('d', frac > 0.001 ? `M ${sunCX - sunR} ${sunCY} A ${sunR} ${sunR} 0 0 1 ${sunX} ${sunY}` : '');
+                    const isNight = now < data.sys.sunrise || now > data.sys.sunset;
+                    if (dot) dot.setAttribute('fill', isNight ? '#5566cc' : 'url(#coreGlowJ)');
+                }
 
                 // Vorhersage (nächste Tage, Mittagswerte) + Tages-Min/Max/Regen
                 let dayMax = data.main.temp_max, dayMin = data.main.temp_min, rainSum = 0, rainN = 0;
@@ -2647,8 +2701,11 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
                         const tmax = Math.round(Math.max(...items.map(it => it.main.temp_max)));
                         const tmin = Math.round(Math.min(...items.map(it => it.main.temp_min)));
                         const x = 802 + i * 84;
-                        return `<rect x="${x}" y="90" width="76" height="164" rx="14" fill="#10141f" stroke="#33447a" stroke-width="1"/>
-                            <text x="${x+38}" y="116" text-anchor="middle" style="font-size:12px;fill:#a6b2dc;font-weight:600">${wd}</text>
+                        const isToday = i === 0;
+                        return `<rect x="${x}" y="90" width="76" height="164" rx="14" fill="${isToday ? '#131a30' : '#10141f'}" stroke="${isToday ? '#7d63d8' : '#33447a'}" stroke-width="${isToday ? 1.5 : 1}"/>
+                            <rect x="${x}" y="90" width="76" height="3" rx="1.5" fill="url(#coreRingGradJ)"/>
+                            <path d="M${x+8},112 L${x+8},100 L${x+20},100 M${x+68},242 L${x+68},254 L${x+56},254" fill="none" stroke="#9b6ce0" stroke-width="1.2" opacity="0.7"/>
+                            <text x="${x+38}" y="116" text-anchor="middle" style="font-size:12px;fill:${isToday ? '#c9d0ff' : '#a6b2dc'};font-weight:600">${isToday ? 'HEUTE' : wd}</text>
                             <text x="${x+38}" y="162" text-anchor="middle" style="font-size:32px">${weatherIcon(noon.weather[0].id)}</text>
                             <text x="${x+38}" y="204" text-anchor="middle" style="font-size:20px;fill:#EEF1F9;font-weight:600">${tmax}°</text>
                             <text x="${x+38}" y="230" text-anchor="middle" style="font-size:14px;fill:#838fb8">${tmin}°</text>`;
@@ -2676,7 +2733,16 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             try {
                 // UV-Index parallel holen (OpenWeatherMap-Current hat keins)
                 fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=uv_index`)
-                    .then(r => r.json()).then(u => { const uv = u.current?.uv_index; if (uv != null) setT('detUvJ', Math.round(uv)); }).catch(() => {});
+                    .then(r => r.json()).then(u => {
+                        const uv = u.current?.uv_index;
+                        if (uv == null) return;
+                        setT('detUvJ', Math.round(uv));
+                        const uvCol = uv < 3 ? '#4ec99a' : uv < 6 ? '#f2d43f' : uv < 8 ? '#f39c12' : uv < 11 ? '#e74c3c' : '#9b6ce0';
+                        const uvGauge = document.getElementById('detUvGaugeJ');
+                        if (uvGauge) { uvGauge.setAttribute('stroke', uvCol); uvGauge.setAttribute('stroke-dashoffset', 214 * (1 - Math.min(uv, 11) / 11)); }
+                        const uvNum = document.getElementById('detUvJ');
+                        if (uvNum) uvNum.style.fill = uvCol;
+                    }).catch(() => {});
                 const r = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=european_aqi,pm2_5,grass_pollen,birch_pollen,alder_pollen,mugwort_pollen,ragweed_pollen`);
                 const d = await r.json();
                 const c = d.current || {};
@@ -4482,6 +4548,7 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
                     goveeDevices = [{ deviceName: 'Wohnzimmer Strip', sku: 'H6159' }, { deviceName: 'Schreibtisch Bar', sku: 'H6008' }];
                     openLedControlWindow();
                 }
+                else if (demo === 'wetter') { openDetailWeather('Dachau'); }
             }, 700);
         })();
 
