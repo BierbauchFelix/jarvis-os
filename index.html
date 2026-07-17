@@ -1340,6 +1340,17 @@
                 <div id="goveeStatus" style="font-size:11px;color:#3a3a42;margin-top:4px;">Kein Key → Demo-Modus</div>
             </div>
             <div class="config-box">
+                <h3>Home Assistant</h3>
+                <div class="input-row-j">
+                    <input type="text" id="haUrl" placeholder="http://192.168.0.101:8123" style="font-size:12px;font-family:monospace;">
+                </div>
+                <div class="input-row-j" style="margin-top:6px;">
+                    <input type="text" id="haToken" placeholder="Langlebiges Zugriffstoken…" style="font-size:12px;font-family:monospace;">
+                    <button class="btn-j" onclick="saveHaSettings()">💾</button>
+                </div>
+                <div id="haStatus" style="font-size:11px;color:#3a3a42;margin-top:4px;">Nicht verbunden — Token: HA → Profil → Sicherheit</div>
+            </div>
+            <div class="config-box">
                 <h3>Deepgram (Stimme)</h3>
                 <div class="input-row-j">
                     <input type="text" id="deepgramKey" placeholder="API Key von deepgram.com…" style="font-size:12px;font-family:monospace;">
@@ -1835,6 +1846,66 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
                 const text = data.choices?.[0]?.message?.content?.trim();
                 return JSON.parse(text);
             } catch(e) { return null; }
+        }
+
+        // ══════════ HOME ASSISTANT ══════════
+        // Optionale Brücke zum Home Server: Geräte-Skripte (Netflix/PC/…)
+        // wirklich auslösen + unbekannte Fragen an die HA-Assist-Pipeline
+        // (Gemini) statt Groq. Ohne URL/Token bleibt alles wie bisher (Demo).
+        function getHaCfg() {
+            try { return { url: (localStorage.getItem('haUrl') || '').replace(/\/$/, ''), token: localStorage.getItem('haToken') || '' }; }
+            catch(e) { return { url: '', token: '' }; }
+        }
+        function haReady() { const c = getHaCfg(); return !!(c.url && c.token); }
+        async function haFetch(path, body) {
+            const c = getHaCfg();
+            const res = await fetch(c.url + path, {
+                method: body ? 'POST' : 'GET',
+                headers: { 'Authorization': 'Bearer ' + c.token, 'Content-Type': 'application/json' },
+                body: body ? JSON.stringify(body) : undefined
+            });
+            if (!res.ok) throw new Error('HA ' + res.status);
+            return res.json();
+        }
+        function haCallService(domain, service, data) { return haFetch(`/api/services/${domain}/${service}`, data || {}); }
+        // Frage an die Assist-Pipeline (Gemini) — Antwort kommt als Text zurück
+        async function haConverse(text) {
+            const j = await haFetch('/api/conversation/process', { text, language: 'de' });
+            return j?.response?.speech?.plain?.speech || '';
+        }
+        // Geräte-Start → HA-Skripte (gleiche Namen wie beim Tab5)
+        const HA_LAUNCH_SCRIPTS = {
+            netflix: 'script.tv_netflix', youtube: 'script.tv_youtube',
+            disney: 'script.tv_disney',   prime: 'script.tv_prime',
+            hdmi: 'script.tv_hdmi',       windows: 'script.pc_anschalten'
+        };
+        function haLaunch(device, app) {
+            if (!haReady()) return false;
+            const entity = device === 'pc' ? HA_LAUNCH_SCRIPTS.windows : HA_LAUNCH_SCRIPTS[app];
+            if (!entity) return false;
+            haCallService('script', 'turn_on', { entity_id: entity }).catch(() => {});
+            return true;
+        }
+        function saveHaSettings() {
+            const u = document.getElementById('haUrl').value.trim();
+            const t = document.getElementById('haToken').value.trim();
+            try { if (u) localStorage.setItem('haUrl', u); if (t) localStorage.setItem('haToken', t); } catch(e) {}
+            document.getElementById('haToken').value = '';
+            updateHaStatus();
+        }
+        async function updateHaStatus() {
+            const el = document.getElementById('haStatus');
+            if (!haReady()) { el.textContent = 'Nicht verbunden — Token: HA → Profil → Sicherheit'; return; }
+            try { await haFetch('/api/'); el.textContent = '✅ Verbunden — Skripte & Gemini laufen über HA'; el.style.color = '#4ec99a'; }
+            catch(e) { el.textContent = '⚠️ Keine Verbindung (Adresse/Token prüfen)'; el.style.color = '#f39c12'; }
+        }
+        setTimeout(() => { try { const c = getHaCfg(); if (c.url) document.getElementById('haUrl').value = c.url; updateHaStatus(); } catch(e) {} }, 500);
+
+        // Display dauerhaft anlassen (Alexa-Modus am Samsung)
+        if ('wakeLock' in navigator) {
+            const holdAwake = () => navigator.wakeLock.request('screen').catch(() => {});
+            holdAwake();
+            document.addEventListener('visibilitychange', () => { if (!document.hidden) holdAwake(); });
         }
 
         function directDispatch(query) {
@@ -2988,6 +3059,9 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
         let launchSeq = 0;
 
         function openLaunchMode(device, app, extra) {
+            // Über Home Assistant wirklich starten (falls verbunden) —
+            // die Animation läuft identisch, nur das "DEMO"-Label ändert sich.
+            const haLaunched = haLaunch(device, app);
             hideAllPanels();
             showJ('idleScreenJ', 0); showJ('idleScreen2J', 0); showJ('idleDotsJ', 0);
             showJ('focusScreenJ', 1);
@@ -3023,7 +3097,7 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
 
             stage.innerHTML = `
                 <text x="640" y="110" text-anchor="middle" style="font-size:22px;fill:#EEF1F9;font-weight:600">${title}</text>
-                <text x="640" y="136" text-anchor="middle" style="font-size:11px;fill:#5566cc;letter-spacing:3px">◈ ${isHdmi ? 'EINGANG WECHSELN' : 'WIRD GESTARTET'} · DEMO</text>
+                <text x="640" y="136" text-anchor="middle" style="font-size:11px;fill:#5566cc;letter-spacing:3px">◈ ${isHdmi ? 'EINGANG WECHSELN' : 'WIRD GESTARTET'} · ${haLaunched ? 'HOME ASSISTANT' : 'DEMO'}</text>
                 ${deviceSvg}
                 <rect id="launchFlashJ" x="${screenCX - (device==='tv'?276:231)}" y="${screenCY - (device==='tv'?146:131)}" width="${device==='tv'?552:462}" height="${device==='tv'?292:262}" fill="#ffffff" opacity="0">
                     <animate attributeName="opacity" values="0;0.35;0" dur="0.5s" begin="0.15s"/>
@@ -4372,6 +4446,29 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             container.innerHTML = '';
             showJ('infoModeJ', 1);
             setLabelJ('Jarvis KI', 'Denke nach…');
+
+            // Erst über Home Assistant (Assist-Pipeline / Gemini) — die kennt
+            // auch deine Geräte. Groq bleibt Fallback, wenn HA nicht antwortet.
+            if (haReady()) {
+                try {
+                    const answer = await haConverse(question);
+                    if (answer) {
+                        let yPos = 220, currentLine = '';
+                        answer.split(' ').forEach(word => {
+                            if ((currentLine + word).length > 52) {
+                                createSvgLine(currentLine.trim(), yPos);
+                                currentLine = word + ' ';
+                                yPos += 32;
+                                if (yPos > 490) return;
+                            } else currentLine += word + ' ';
+                        });
+                        if (currentLine.trim()) createSvgLine(currentLine.trim(), yPos);
+                        setLabelJ('Jarvis KI', 'Antwort über Home Assistant');
+                        jarvisSpeak(answer);
+                        return;
+                    }
+                } catch(e) { /* HA nicht erreichbar → weiter mit Groq */ }
+            }
 
             const apiKey = loadGroqKey();
 
