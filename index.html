@@ -1350,22 +1350,6 @@
                 </div>
                 <div id="haStatus" style="font-size:11px;color:#3a3a42;margin-top:4px;">Nicht verbunden — Token: HA → Profil → Sicherheit</div>
             </div>
-            <div class="config-box">
-                <h3>Deepgram (Stimme)</h3>
-                <div class="input-row-j">
-                    <input type="text" id="deepgramKey" placeholder="API Key von deepgram.com…" style="font-size:12px;font-family:monospace;">
-                    <button class="btn-j" onclick="saveDeepgramKey()">💾</button>
-                </div>
-                <div id="deepgramStatus" style="font-size:11px;color:#3a3a42;margin-top:4px;">Kein Key → Browser-Stimme</div>
-            </div>
-            <div class="config-box">
-                <h3>Groq API Key</h3>
-                <div class="input-row-j">
-                    <input type="text" id="groqApiKey" placeholder="gsk_..." style="font-family:monospace;font-size:12px;">
-                    <button class="btn-j" onclick="saveGroqKey()">💾</button>
-                </div>
-                <div id="groqKeyStatus" style="font-size:11px;color:#3a3a42;margin-top:4px;">Kein Key gespeichert</div>
-            </div>
             <button class="btn-j" style="text-align: center;" onclick="resetToHome()">Dashboard (Reset)</button>
         </div>
     </div>
@@ -2087,6 +2071,9 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             if (isDateQuery(lqPC)) { handleDateQuery(); return; }
             if (lqPC.includes('erinner')) { handleReminderCommand(lqPC); return; }
             if (lqPC.startsWith('nachtmodus')) { handleNightCommand(lqPC); return; }
+            // Lautstärke der Jarvis-Stimme ("mach dich lauter/leiser")
+            if (/\blauter\b/.test(lqPC)) { adjustJarvisVolume(1); return; }
+            if (/\bleiser\b/.test(lqPC)) { adjustJarvisVolume(-1); return; }
             // Dashboard wechseln: "dashboard 1/2", "idle 1/2", "erstes/zweites dashboard"
             if (/\b(dashboard|idle|ansicht|bildschirm)\s*(eins|1|erste)\b/.test(lqPC) || /\berste[sr]?\s*(dashboard|ansicht|bildschirm)\b/.test(lqPC)) { resetToHome(); switchIdle(0); setLabelJ('Idle Dashboard', 'Erstes Dashboard'); return; }
             if (/\b(dashboard|idle|ansicht|bildschirm)\s*(zwei|2|zweite)\b/.test(lqPC) || /\bzweite[sr]?\s*(dashboard|ansicht|bildschirm)\b/.test(lqPC)) { resetToHome(); switchIdle(1); setLabelJ('Idle Dashboard', 'Zweites Dashboard'); return; }
@@ -4275,6 +4262,16 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             if (t) { t.style.opacity = 0; i.style.opacity = 1; }
         }
 
+        // ── Lautstärke ("lauter"/"leiser" per Sprachbefehl, in 20-%-Schritten) ──
+        let jarvisVolume = parseFloat(localStorage.getItem('jarvisVolume') || '1') || 1;
+        function adjustJarvisVolume(dir) {
+            jarvisVolume = Math.min(1, Math.max(0.2, jarvisVolume + dir * 0.2));
+            try { localStorage.setItem('jarvisVolume', String(jarvisVolume)); } catch(e) {}
+            const pct = Math.round(jarvisVolume * 100);
+            setLabelJ('🔊 Lautstärke', `${pct} %`);
+            jarvisSpeak(`Lautstärke ${pct} Prozent.`);
+        }
+
         async function jarvisSpeak(text) {
             if (!speechEnabled) return;
             // Stop any current speech
@@ -4293,6 +4290,7 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
                     const blob = await res.blob();
                     const url = URL.createObjectURL(blob);
                     ttsAudio.src = url;
+                    ttsAudio.volume = jarvisVolume;
                     ttsAudio.onplay  = mouthStart;
                     ttsAudio.onended = () => { mouthStop(); URL.revokeObjectURL(url); currentAudio = null; };
                     ttsAudio.onerror = () => { mouthStop(); currentAudio = null; };
@@ -4306,6 +4304,7 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             if (!window.speechSynthesis) return;
             const utt = new SpeechSynthesisUtterance(text);
             utt.lang = 'de-DE'; utt.rate = 0.9; utt.pitch = 1.1;
+            utt.volume = jarvisVolume;
             const trySpeak = () => {
                 const v = speechSynthesis.getVoices();
                 const voice = v.find(x => x.lang === 'de-DE' && /natural|online|neural/i.test(x.name))
