@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Jarvis OS · Home Assistant</title>
+<!-- ============================================================
+     JARVIS OS — Home-Assistant-Dashboard für Samsung-Display
+     ------------------------------------------------------------
+     Eine Datei, keine Abhängigkeiten außer der Modak-Schrift.
+     Verbindet sich per WebSocket-API direkt mit Home Assistant.
+
+     INSTALLATION (einmalig):
+     1. Datei nach Home Assistant kopieren:  /config/www/jarvis.html
+        (Ordner "www" ggf. anlegen → danach HA EINMAL neu starten)
+     2. Auf dem Samsung im Browser öffnen:
+        http://192.168.0.101:8123/local/jarvis.html
+     3. Zahnrad oben rechts → HA-Adresse, Token & Entitäten eintragen.
+        Token erstellen: HA → Profil → Sicherheit →
+        "Langlebige Zugriffstoken" → Token erstellen → kopieren.
+     Die Zugangsdaten bleiben NUR im Browser (localStorage) —
+     in dieser Datei steht nichts Geheimes, sie darf ins Git.
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0e18; --card:#10141f; --card2:#0d1018; --accent:#1a2038;
+  --line:#33447a; --blue:#5566cc; --purple:#7d63d8; --violet:#9b6ce0;
+  --green:#4ec99a; --text:#eef1f9; --text2:#b0bce0; --muted:#838fb8;
+  --dim:#55608c; --warn:#f39c12;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  height:100%;overflow:hidden;-webkit-user-select:none;user-select:none}
+/* ── K2-Bergmassiv als Hintergrund (wie Web-/Tab5-Version) ── */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+#bg svg{width:100%;height:100%;object-fit:cover}
+/* HUD-Eck-Klammern */
+.br{position:fixed;background:var(--blue);opacity:.55;z-index:2;pointer-events:none}
+/* ── Grundgerüst ── */
+#app{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;padding:14px 18px}
+header{display:flex;align-items:center;gap:14px;padding:2px 30px 8px;flex:0 0 auto}
+header .dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+header .dot.off{background:#d4537e;box-shadow:0 0 8px #d4537e}
+header h2{font-size:13px;letter-spacing:3px;margin:0;color:var(--text2);font-weight:600}
+header .tag{font-size:10px;letter-spacing:2px;color:var(--blue)}
+header .sp{flex:1}
+header .hclock{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hbtn{background:var(--accent);border:1px solid var(--line);color:var(--text2);
+  border-radius:9px;padding:7px 13px;font-size:14px;cursor:pointer}
+.hbtn:active{background:var(--purple);color:#fff}
+/* ── Karten-Raster (Tab S9 quer) ── */
+#grid{flex:1;display:grid;gap:12px;min-height:0;padding:0 12px 6px;
+  grid-template-columns:1.05fr 1.35fr 1.1fr;
+  grid-template-rows:1.25fr 1fr;
+  grid-template-areas:"core clock music" "lights devices side"}
+.card{background:linear-gradient(180deg,var(--card) 0%,var(--card2) 100%);
+  border:1px solid var(--line);border-radius:16px;position:relative;
+  padding:14px 16px;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:2px}
+.ct{font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between}
+.ct b{color:var(--blue);font-weight:600}
+/* Core */
+#core-card{grid-area:core;align-items:center;justify-content:center}
+#core-wrap{position:relative;width:min(100%,34vh);aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+#core-wrap svg{width:100%;height:100%}
+#core-status{font-size:11px;letter-spacing:3px;color:#9b8fe0;margin-top:6px}
+@keyframes spinJ{to{transform:rotate(360deg)}}
+#ring-a{transform-origin:50% 50%;animation:spinJ 14s linear infinite}
+#ring-b{transform-origin:50% 50%;animation:spinJ 9s linear infinite reverse}
+/* Uhr + Wetter */
+#clock-card{grid-area:clock;align-items:center;justify-content:center;text-align:center}
+#big-clock{font-family:'Modak',cursive;font-size:clamp(64px,11vw,150px);line-height:.95;
+  background:linear-gradient(180deg,#c9d0ff,#7d63d8);-webkit-background-clip:text;background-clip:text;color:transparent}
+#big-date{font-size:15px;color:var(--text2);letter-spacing:1px;margin-top:2px}
+#wx{display:flex;gap:26px;margin-top:14px;align-items:center;justify-content:center}
+#wx .t{font-size:38px;font-weight:600}
+#wx .d{font-size:13px;color:var(--muted);text-align:left;line-height:1.5}
+/* Musik */
+#music-card{grid-area:music}
+#mp-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:0}
+#mp-cover{width:84px;height:84px;border-radius:14px;background:var(--accent);border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--violet)}
+#mp-title{font-size:16px;font-weight:600;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mp-artist{font-size:12px;color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mp-bar{width:82%;height:5px;border-radius:3px;background:var(--accent);overflow:hidden}
+#mp-fill{height:100%;width:0%;border-radius:3px;background:var(--purple);transition:width .5s linear}
+#mp-ctl{display:flex;gap:16px;align-items:center;margin-top:4px}
+.mbtn{width:46px;height:46px;border-radius:50%;background:var(--accent);border:1px solid var(--line);
+  color:#c9d0ff;font-size:17px;cursor:pointer}
+.mbtn.play{width:58px;height:58px;background:var(--purple);border:none;color:#fff;font-size:21px}
+.mbtn:active{transform:scale(.93)}
+/* Lichter */
+#lights-card{grid-area:lights}
+#lgrid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;min-height:0}
+.lcard{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--violet);
+  border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;min-height:0}
+.lhead{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.ldot{width:8px;height:8px;border-radius:50%;background:#3a4160}
+.ldot.on{background:var(--green);box-shadow:0 0 7px var(--green)}
+.lbtns{margin-left:auto;display:flex;gap:6px}
+.lb{font-size:11px;padding:5px 12px;border-radius:7px;cursor:pointer;border:1px solid var(--line);background:var(--accent);color:#8a93b8}
+.lb.on{background:#241e45;border-color:var(--purple);color:#c9d0ff}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:3px;background:var(--accent);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#c9d0ff;border:3px solid var(--purple)}
+.sw{display:flex;gap:8px}
+.sw i{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.12)}
+/* Geräte */
+#dev-card{grid-area:devices}
+#dgrid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:9px;min-height:0}
+.dtile{border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:0}
+.dtile b{font-size:17px}
+.dtile span{font-size:10px;letter-spacing:1px;color:var(--muted)}
+.dtile:active{transform:scale(.95);border-color:var(--purple)}
+/* Seiten-Spalte: Fahrtzeit + Notizen */
+#side{grid-area:side;display:flex;flex-direction:column;gap:12px;min-height:0}
+#side .card{flex:1}
+#rt-time{font-size:30px;font-weight:600}
+#rt-sub{font-size:12px;color:var(--muted);margin-top:3px}
+#notes-txt{flex:1;font-size:13px;color:#a6b2dc;line-height:1.55;overflow:auto;white-space:pre-wrap}
+/* Start-Overlay (Netflix & Co.) */
+#launch{position:fixed;inset:0;background:#05070c;z-index:50;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#launch.on{display:flex}
+#launch .ic{width:170px;height:170px;border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:74px;font-weight:800;color:#fff}
+#launch .nm{font-size:20px;font-weight:600;letter-spacing:1px}
+#launch .st{font-size:11px;letter-spacing:2px;color:var(--violet)}
+#lb-track{width:300px;height:6px;border-radius:3px;background:var(--accent);overflow:hidden}
+#lb-fill{height:100%;width:0;background:var(--purple);border-radius:3px;transition:width .18s ease-out}
+/* Einstellungen */
+#cfg{position:fixed;top:0;right:0;bottom:0;width:min(420px,94vw);background:var(--card);
+  border-left:1px solid var(--line);z-index:60;padding:22px;transform:translateX(105%);
+  transition:transform .25s ease;overflow:auto}
+#cfg.open{transform:none}
+#cfg h3{margin:0 0 4px;font-size:15px;letter-spacing:2px}
+#cfg label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--muted);margin:13px 0 4px}
+#cfg input{width:100%;background:var(--accent);border:1px solid var(--line);color:var(--text);
+  border-radius:8px;padding:9px 11px;font-size:13px}
+#cfg .save{margin-top:18px;width:100%;background:var(--purple);border:none;color:#fff;
+  border-radius:9px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:1px}
+#cfg .hint{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px}
+/* Hochformat / Handy: alles untereinander */
+@media (max-aspect-ratio:5/4){
+  html,body{overflow:auto}
+  #app{height:auto;min-height:100vh}
+  #grid{display:flex;flex-direction:column}
+  .card{min-height:170px}
+  #core-wrap{width:min(70%,300px)}
+}
+</style>
+</head>
+<body>
+
+<div id="bg"><svg viewBox="0 0 1280 720" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#0B0E18"/>
+  <g opacity="0.16">
+    <path d="M -20 640 L 180 470 L 320 545 L 470 430 L 560 500 L 660 415 L 760 505 L 900 400 L 1050 520 L 1180 445 L 1300 560 L 1300 662 L -20 662 Z" fill="#3a4160"/>
+    <path d="M 120 720 L 360 300 L 560 720 Z" fill="#3f4666"/>
+    <path d="M 760 720 L 980 360 L 1180 720 Z" fill="#3f4666"/>
+    <path d="M 300 720 L 640 150 L 980 720 Z" fill="#5a6284"/>
+    <path d="M 640 150 L 980 720 L 760 720 L 640 320 Z" fill="#454c6e"/>
+    <path d="M 640 150 L 700 300 L 640 270 L 590 330 L 555 285 Z" fill="#c7cee6" opacity="0.7"/>
+    <path d="M 640 150 L 640 320 L 700 430 L 720 360 Z" fill="#8f97ba" opacity="0.6"/>
+    <path d="M 360 300 L 420 400 L 380 380 L 340 430 Z" fill="#b7bede" opacity="0.55"/>
+    <path d="M 980 360 L 1030 450 L 995 435 L 960 480 Z" fill="#b7bede" opacity="0.5"/>
+  </g>
+</svg></div>
+<i class="br" style="top:14px;left:16px;width:30px;height:2px"></i><i class="br" style="top:14px;left:16px;width:2px;height:30px"></i>
+<i class="br" style="top:14px;right:16px;width:30px;height:2px"></i><i class="br" style="top:14px;right:16px;width:2px;height:30px"></i>
+<i class="br" style="bottom:14px;left:16px;width:30px;height:2px"></i><i class="br" style="bottom:14px;left:16px;width:2px;height:30px"></i>
+<i class="br" style="bottom:14px;right:16px;width:30px;height:2px"></i><i class="br" style="bottom:14px;right:16px;width:2px;height:30px"></i>
+
+<div id="app">
+  <header>
+    <div class="dot off" id="ha-dot"></div>
+    <h2>JARVIS OS</h2><span class="tag">◈ HOME ASSISTANT LINK</span>
+    <span class="sp"></span>
+    <span class="hclock" id="hclock">--:--</span>
+    <button class="hbtn" id="btn-full" title="Vollbild">⛶</button>
+    <button class="hbtn" id="btn-cfg" title="Einstellungen">⚙</button>
+  </header>
+
+  <div id="grid">
+    <!-- ── Holo-Core ── -->
+    <div class="card" id="core-card">
+      <div id="core-wrap">
+        <svg viewBox="110 180 340 340" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="cg" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#8f9bff" stop-opacity="0.9"/>
+              <stop offset="45%" stop-color="#6a58c8" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#6a58c8" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#5566cc"/><stop offset="55%" stop-color="#7d63d8"/><stop offset="100%" stop-color="#9b6ce0"/>
+            </linearGradient>
+          </defs>
+          <circle cx="280" cy="350" r="150" fill="url(#cg)" opacity="0.5"/>
+          <g id="ring-a"><circle cx="280" cy="350" r="132" fill="none" stroke="url(#rg)" stroke-width="1.5" stroke-dasharray="2 12" opacity="0.8"/>
+            <circle cx="280" cy="218" r="4" fill="#9b6ce0"/></g>
+          <circle cx="280" cy="350" r="108" fill="none" stroke="#5566cc" stroke-width="1" opacity="0.5"/>
+          <g stroke="#7d63d8" stroke-width="2" opacity="0.8">
+            <line x1="280" y1="242" x2="280" y2="256"/><line x1="280" y1="444" x2="280" y2="458"/>
+            <line x1="172" y1="350" x2="186" y2="350"/><line x1="374" y1="350" x2="388" y2="350"/>
+          </g>
+          <g id="ring-b"><path d="M 280 350 m -108 0 a 108 108 0 0 1 40 -94" fill="none" stroke="#9b6ce0" stroke-width="2.5" opacity="0.9"/></g>
+          <g stroke="#33447a" stroke-width="1" opacity="0.5">
+            <line x1="150" y1="350" x2="410" y2="350"/><line x1="280" y1="220" x2="280" y2="480"/>
+          </g>
+          <polygon points="280,286 335,318 335,382 280,414 225,382 225,318" fill="none" stroke="#7d63d8" stroke-width="1.5" opacity="0.7"/>
+          <circle cx="280" cy="350" r="46" fill="none" stroke="#5566cc" stroke-width="1" opacity="0.6"/>
+          <circle cx="280" cy="350" r="34" fill="url(#cg)"/>
+          <g fill="#c9d0ff">
+            <rect x="266" y="336" width="8" height="8" rx="1.5"/><rect x="286" y="336" width="8" height="8" rx="1.5"/>
+            <rect x="266" y="356" width="8" height="8" rx="1.5"/><rect x="286" y="356" width="8" height="8" rx="1.5"/>
+          </g>
+        </svg>
+      </div>
+      <div id="core-status">CORE AKTIV</div>
+    </div>
+
+    <!-- ── Uhr + Wetter ── -->
+    <div class="card" id="clock-card">
+      <div id="big-clock">--:--</div>
+      <div id="big-date">—</div>
+      <div id="wx"><span style="font-size:44px" id="wx-i">☁</span>
+        <span class="t" id="wx-t">--°</span>
+        <div class="d" id="wx-d">Wetter wird geladen …</div>
+      </div>
+    </div>
+
+    <!-- ── Musik ── -->
+    <div class="card" id="music-card">
+      <div class="ct"><span>MUSIK</span><b>◈ NOW PLAYING</b></div>
+      <div id="mp-body">
+        <div id="mp-cover">♪</div>
+        <div id="mp-title">Keine Wiedergabe</div>
+        <div id="mp-artist">Spotify über Home Assistant</div>
+        <div id="mp-bar"><div id="mp-fill"></div></div>
+        <div id="mp-ctl">
+          <button class="mbtn" data-ms="media_previous_track">⏮</button>
+          <button class="mbtn play" data-ms="media_play_pause" id="mp-play">▶</button>
+          <button class="mbtn" data-ms="media_next_track">⏭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Lichter ── -->
+    <div class="card" id="lights-card">
+      <div class="ct"><span>LICHTER</span><b>◈ GOVEE NEURAL LINK</b></div>
+      <div id="lgrid"></div>
+    </div>
+
+    <!-- ── Geräte ── -->
+    <div class="card" id="dev-card">
+      <div class="ct"><span>GERÄTE</span><b>◈ STREAMING</b></div>
+      <div id="dgrid"></div>
+    </div>
+
+    <!-- ── Fahrtzeit + Notizen ── -->
+    <div id="side">
+      <div class="card"><div class="ct"><span>FAHRTZEIT</span><b>◈ AUTO</b></div>
+        <div id="rt-time">-- min</div><div id="rt-sub">Dachau » Arbeit</div></div>
+      <div class="card"><div class="ct"><span>NOTIZEN</span><b>◈ ARCHIV</b></div>
+        <div id="notes-txt">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Start-Overlay -->
+<div id="launch"><div class="ic" id="l-ic">N</div><div class="nm" id="l-nm">NETFLIX</div>
+  <div class="st" id="l-st">WIRD GESTARTET …</div><div id="lb-track"><div id="lb-fill"></div></div></div>
+
+<!-- Einstellungen -->
+<div id="cfg">
+  <h3>⚙ EINSTELLUNGEN</h3>
+  <div class="hint">Token: HA → Profil → Sicherheit → „Langlebige Zugriffstoken". Alles bleibt nur in diesem Browser gespeichert.</div>
+  <label>HOME-ASSISTANT-ADRESSE</label><input id="c-url" placeholder="http://192.168.0.101:8123">
+  <label>ZUGRIFFS-TOKEN</label><input id="c-token" placeholder="eyJhbGciOi…">
+  <label>MUSIK-PLAYER</label><input id="c-media" placeholder="media_player.spotify_felix">
+  <label>LICHT 1 (ENTITÄT ; NAME)</label><input id="c-l1" placeholder="light.wohnzimmer;Wohnzimmer">
+  <label>LICHT 2 (ENTITÄT ; NAME)</label><input id="c-l2" placeholder="light.schreibtisch;Schreibtisch">
+  <label>FAHRTZEIT-SENSOR</label><input id="c-route" placeholder="sensor.fahrtzeit_arbeit">
+  <label>NOTIZEN (INPUT_TEXT)</label><input id="c-notes" placeholder="input_text.jarvis_notizen">
+  <label>GERÄTE-SKRIPTE (6× SCRIPT.…, KOMMAGETRENNT: NETFLIX,YOUTUBE,DISNEY,PRIME,HDMI,PC)</label>
+  <input id="c-scripts" placeholder="script.tv_netflix,script.tv_youtube,script.tv_disney,script.tv_prime,script.tv_hdmi,script.pc_anschalten">
+  <button class="save" id="c-save">SPEICHERN & VERBINDEN</button>
+</div>
+
+<script>
+"use strict";
+/* ═══════════ Konfiguration (localStorage) ═══════════ */
+const DEF = {
+  url:"http://192.168.0.101:8123", token:"",
+  media:"media_player.spotify_felix",
+  l1:"light.wohnzimmer;Wohnzimmer", l2:"light.schreibtisch;Schreibtisch",
+  route:"sensor.fahrtzeit_arbeit", notes:"input_text.jarvis_notizen",
+  scripts:"script.tv_netflix,script.tv_youtube,script.tv_disney,script.tv_prime,script.tv_hdmi,script.pc_anschalten"
+};
+let cfg = Object.assign({}, DEF, JSON.parse(localStorage.getItem("jarvisCfg")||"{}"));
+const $ = id => document.getElementById(id);
+
+/* Einstellungs-Schublade */
+const FIELDS = [["c-url","url"],["c-token","token"],["c-media","media"],["c-l1","l1"],
+  ["c-l2","l2"],["c-route","route"],["c-notes","notes"],["c-scripts","scripts"]];
+$("btn-cfg").onclick = () => { FIELDS.forEach(([i,k]) => $(i).value = cfg[k]); $("cfg").classList.toggle("open"); };
+$("c-save").onclick = () => {
+  FIELDS.forEach(([i,k]) => cfg[k] = $(i).value.trim());
+  localStorage.setItem("jarvisCfg", JSON.stringify(cfg));
+  $("cfg").classList.remove("open");
+  connect();
+};
+$("btn-full").onclick = () => document.fullscreenElement
+  ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+
+/* Display wachhalten (Wall-Tablet) */
+if ("wakeLock" in navigator) {
+  const lock = () => navigator.wakeLock.request("screen").catch(()=>{});
+  lock(); document.addEventListener("visibilitychange", () => !document.hidden && lock());
+}
+
+/* ═══════════ Uhr ═══════════ */
+const DAYS=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+const MON=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+function tickClock(){
+  const n=new Date(), hh=String(n.getHours()).padStart(2,"0"), mm=String(n.getMinutes()).padStart(2,"0");
+  $("big-clock").textContent=`${hh}:${mm}`; $("hclock").textContent=`${hh}:${mm}`;
+  $("big-date").textContent=`${DAYS[n.getDay()]}, ${n.getDate()}. ${MON[n.getMonth()]} ${n.getFullYear()}`;
+}
+tickClock(); setInterval(tickClock, 5000);
+
+/* ═══════════ Wetter direkt von Open-Meteo (wie Tab5) ═══════════ */
+const WMO=[[0,"☀","Klarer Himmel"],[1,"🌤","Überwiegend klar"],[2,"⛅","Teils bewölkt"],[3,"☁","Bedeckt"],
+  [45,"🌫","Nebel"],[51,"🌦","Nieselregen"],[61,"🌧","Leichter Regen"],[63,"🌧","Regen"],[65,"🌧","Starker Regen"],
+  [71,"🌨","Schneefall"],[80,"🌦","Regenschauer"],[95,"⛈","Gewitter"]];
+function wmo(c){ let r=WMO[0]; for(const w of WMO) if(c>=w[0]) r=w; return r; }
+async function fetchWx(){
+  try{
+    const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=48.2632&longitude=11.4342&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&timezone=Europe%2FBerlin");
+    const j = await r.json(), c = j.current, w = wmo(c.weather_code);
+    $("wx-i").textContent=w[1]; $("wx-t").textContent=`${Math.round(c.temperature_2m)}°`;
+    $("wx-d").innerHTML=`${w[2]}<br>Gefühlt ${Math.round(c.apparent_temperature)}° · ${c.relative_humidity_2m} % · ${Math.round(c.wind_speed_10m)} km/h`;
+  }catch(e){ $("wx-d").textContent="Wetter nicht erreichbar"; }
+}
+fetchWx(); setInterval(fetchWx, 10*60*1000);
+
+/* ═══════════ Home-Assistant-WebSocket ═══════════ */
+let ws=null, msgId=0, states={}, wsOk=false, retryT=null;
+const pend = {};
+function haSend(obj){ if(!wsOk) return; obj.id=++msgId; ws.send(JSON.stringify(obj)); return msgId; }
+function callService(domain, service, data, entity){
+  haSend({type:"call_service", domain, service, service_data:data||{}, target:{entity_id:entity}});
+}
+function connect(){
+  clearTimeout(retryT);
+  if (ws) { try{ ws.close(); }catch(e){} }
+  if (!cfg.token) { $("ha-dot").classList.add("off"); $("cfg").classList.add("open"); return; }
+  const wsUrl = cfg.url.replace(/^http/,"ws").replace(/\/$/,"") + "/api/websocket";
+  try { ws = new WebSocket(wsUrl); } catch(e){ retry(); return; }
+  ws.onmessage = ev => {
+    const m = JSON.parse(ev.data);
+    if (m.type==="auth_required") ws.send(JSON.stringify({type:"auth", access_token:cfg.token}));
+    else if (m.type==="auth_ok"){
+      wsOk = true; $("ha-dot").classList.remove("off");
+      pend.states = haSend({type:"get_states"});
+      haSend({type:"subscribe_events", event_type:"state_changed"});
+    }
+    else if (m.type==="auth_invalid"){ wsOk=false; $("ha-dot").classList.add("off"); $("cfg").classList.add("open"); }
+    else if (m.type==="result" && m.id===pend.states && m.success){
+      for (const s of m.result) states[s.entity_id]=s;
+      renderAll();
+    }
+    else if (m.type==="event" && m.event && m.event.event_type==="state_changed"){
+      const d=m.event.data; if(!d.new_state) return;
+      states[d.entity_id]=d.new_state; renderEntity(d.entity_id);
+    }
+  };
+  ws.onclose = () => { wsOk=false; $("ha-dot").classList.add("off"); retry(); };
+  ws.onerror = () => { try{ws.close();}catch(e){} };
+}
+function retry(){ clearTimeout(retryT); retryT=setTimeout(connect, 5000); }
+
+/* ═══════════ Rendering ═══════════ */
+function ent(id){ return states[id]; }
+function l1id(){ return cfg.l1.split(";")[0].trim(); }
+function l2id(){ return cfg.l2.split(";")[0].trim(); }
+
+function renderEntity(id){
+  if (id===cfg.media) renderMedia();
+  else if (id===l1id() || id===l2id()) renderLights();
+  else if (id===cfg.route) renderRoute();
+  else if (id===cfg.notes) renderNotes();
+}
+function renderAll(){ renderMedia(); buildLights(); renderLights(); buildDevices(); renderRoute(); renderNotes(); }
+
+/* ── Musik ── */
+let mediaTick=null;
+function renderMedia(){
+  const s = ent(cfg.media);
+  const playing = s && s.state==="playing";
+  const a = s ? s.attributes : {};
+  $("mp-title").textContent  = (s && a.media_title)  ? a.media_title  : "Keine Wiedergabe";
+  $("mp-artist").textContent = (s && a.media_artist) ? a.media_artist : "Spotify über Home Assistant";
+  $("mp-play").textContent = playing ? "⏸" : "▶";
+  if (s && a.entity_picture) {
+    $("mp-cover").style.background = `url(${cfg.url.replace(/\/$/,"")+a.entity_picture}) center/cover`;
+    $("mp-cover").textContent = "";
+  } else { $("mp-cover").style.background=""; $("mp-cover").textContent="♪"; }
+  clearInterval(mediaTick);
+  if (playing && a.media_duration){
+    const upd = new Date(a.media_position_updated_at).getTime();
+    mediaTick = setInterval(() => {
+      const pos = (a.media_position||0) + (Date.now()-upd)/1000;
+      $("mp-fill").style.width = Math.min(100, 100*pos/a.media_duration) + "%";
+    }, 1000);
+  } else if (s && a.media_duration){
+    $("mp-fill").style.width = Math.min(100, 100*(a.media_position||0)/a.media_duration)+"%";
+  } else $("mp-fill").style.width = "0%";
+}
+document.querySelectorAll("[data-ms]").forEach(b =>
+  b.onclick = () => callService("media_player", b.dataset.ms, {}, cfg.media));
+
+/* ── Lichter ── */
+const SWATCHES = [[242,166,35],[255,255,255],[55,138,221],[29,158,117],[212,83,126],[155,108,224],[125,99,216]];
+function buildLights(){
+  const g = $("lgrid"); g.innerHTML = "";
+  for (const raw of [cfg.l1, cfg.l2]) {
+    const [id, name] = raw.split(";").map(s=>s.trim());
+    const el = document.createElement("div"); el.className="lcard"; el.dataset.ent=id;
+    el.innerHTML = `<div class="lhead"><i class="ldot"></i>${name||id}
+        <span class="lbtns"><button class="lb on" data-a="on">An</button><button class="lb" data-a="off">Aus</button></span></div>
+      <input type="range" min="1" max="100" value="70">
+      <div class="sw">${SWATCHES.map(c=>`<i style="background:rgb(${c})" data-rgb="${c.join(",")}"></i>`).join("")}</div>`;
+    el.querySelector('[data-a="on"]').onclick  = () => callService("light","turn_on",{},id);
+    el.querySelector('[data-a="off"]').onclick = () => callService("light","turn_off",{},id);
+    el.querySelector("input").onchange = e => callService("light","turn_on",{brightness_pct:+e.target.value},id);
+    el.querySelectorAll("[data-rgb]").forEach(s =>
+      s.onclick = () => callService("light","turn_on",{rgb_color:s.dataset.rgb.split(",").map(Number)},id));
+    g.appendChild(el);
+  }
+}
+function renderLights(){
+  document.querySelectorAll(".lcard").forEach(el => {
+    const s = ent(el.dataset.ent); if(!s) return;
+    el.querySelector(".ldot").classList.toggle("on", s.state==="on");
+    if (s.attributes.brightness != null)
+      el.querySelector("input").value = Math.round(s.attributes.brightness/2.55);
+  });
+}
+
+/* ── Geräte + Start-Animation ── */
+const DEVS = [["NETFLIX","N","#E50914"],["YOUTUBE","▶","#FF0000"],["DISNEY+","D+","#0E3B8C"],
+  ["PRIME","pv","#00A8E1"],["HDMI","⇥","#4EC99A"],["PC","⏻","#7D63D8"]];
+function buildDevices(){
+  const g = $("dgrid"); g.innerHTML = "";
+  const scripts = cfg.scripts.split(",").map(s=>s.trim());
+  DEVS.forEach((d,i) => {
+    const el = document.createElement("div"); el.className="dtile";
+    el.innerHTML = `<b style="color:${d[2]}">${d[1]}</b><span>${d[0]}</span>`;
+    el.onclick = () => { launchAnim(d); if (scripts[i]) callService("script","turn_on",{},scripts[i]); };
+    g.appendChild(el);
+  });
+}
+function launchAnim(d){
+  $("l-ic").textContent=d[1]; $("l-ic").style.background=d[2]; $("l-nm").textContent=d[0];
+  $("l-st").textContent="WIRD GESTARTET …"; $("l-st").style.color="var(--violet)";
+  $("launch").classList.add("on"); $("lb-fill").style.width="0";
+  const steps=[5,22,39,55,68,79,88,94,98,100]; let i=0;
+  const t=setInterval(()=>{ $("lb-fill").style.width=steps[i++]+"%";
+    if(i>=steps.length){ clearInterval(t); $("l-st").textContent="GESTARTET ✓"; $("l-st").style.color="var(--green)";
+      setTimeout(()=>$("launch").classList.remove("on"), 900); } }, 150);
+}
+
+/* ── Fahrtzeit & Notizen ── */
+function renderRoute(){
+  const s = ent(cfg.route); if(!s || isNaN(+s.state)) return;
+  const m = Math.round(+s.state);
+  $("rt-time").textContent = m>=60 ? `${(m/60)|0} h ${m%60} min` : `${m} min`;
+  const arr = new Date(Date.now()+m*60000);
+  const dist = s.attributes.distance ? `${Math.round(s.attributes.distance)} km · ` : "";
+  $("rt-sub").textContent = `${dist}Ankunft ca. ${String(arr.getHours()).padStart(2,"0")}:${String(arr.getMinutes()).padStart(2,"0")} Uhr`;
+}
+function renderNotes(){
+  const s = ent(cfg.notes);
+  $("notes-txt").textContent = (s && s.state && !["unknown","unavailable"].includes(s.state))
+    ? s.state : "Noch keine Notizen.\nSag: „Hey Jarvis, notiere …“";
+}
+/* Notiz antippen = bearbeiten */
+$("notes-txt").onclick = () => {
+  const cur = ent(cfg.notes) ? ent(cfg.notes).state : "";
+  const v = prompt("Notiz:", cur==="unknown"?"":cur);
+  if (v!==null) callService("input_text","set_value",{value:v}, cfg.notes);
+};
+
+connect();
+</script>
+</body>
+</html>
