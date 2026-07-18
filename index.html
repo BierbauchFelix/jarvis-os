@@ -1324,28 +1324,15 @@
                 </div>
             </div>
             <div class="config-box">
-                <h3>Spotify</h3>
-                <div class="input-row-j">
-                    <input type="text" id="spotifyClientId" placeholder="Client ID (developer.spotify.com)…" style="font-size:12px;font-family:monospace;">
-                    <button class="btn-j" onclick="spotifyLogin()">🔗</button>
-                </div>
-                <div id="spotifyStatus" style="font-size:11px;color:#3a3a42;margin-top:4px;">Nicht verbunden</div>
-            </div>
-            <div class="config-box">
-                <h3>Govee LEDs</h3>
-                <div class="input-row-j">
-                    <input type="text" id="goveeApiKey" placeholder="Govee API Key…" style="font-size:12px;font-family:monospace;">
-                    <button class="btn-j" onclick="saveGoveeKey()">💾</button>
-                </div>
-                <div id="goveeStatus" style="font-size:11px;color:#3a3a42;margin-top:4px;">Kein Key → Demo-Modus</div>
-            </div>
-            <div class="config-box">
                 <h3>Home Assistant</h3>
                 <div class="input-row-j">
                     <input type="text" id="haUrl" placeholder="http://192.168.0.101:8123" style="font-size:12px;font-family:monospace;">
                 </div>
                 <div class="input-row-j" style="margin-top:6px;">
                     <input type="text" id="haToken" placeholder="Langlebiges Zugriffstoken…" style="font-size:12px;font-family:monospace;">
+                </div>
+                <div class="input-row-j" style="margin-top:6px;">
+                    <input type="text" id="haAgent" placeholder="Assist-Agent (leer = Standard), z. B. conversation.google_gemini" style="font-size:12px;font-family:monospace;">
                     <button class="btn-j" onclick="saveHaSettings()">💾</button>
                 </div>
                 <div id="haStatus" style="font-size:11px;color:#3a3a42;margin-top:4px;">Nicht verbunden — Token: HA → Profil → Sicherheit</div>
@@ -1837,24 +1824,41 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
         // wirklich auslösen + unbekannte Fragen an die HA-Assist-Pipeline
         // (Gemini) statt Groq. Ohne URL/Token bleibt alles wie bisher (Demo).
         function getHaCfg() {
-            try { return { url: (localStorage.getItem('haUrl') || '').replace(/\/$/, ''), token: localStorage.getItem('haToken') || '' }; }
-            catch(e) { return { url: '', token: '' }; }
+            try { return {
+                url: (localStorage.getItem('haUrl') || '').replace(/\/$/, ''),
+                token: localStorage.getItem('haToken') || '',
+                agent: localStorage.getItem('haAgent') || ''
+            }; }
+            catch(e) { return { url: '', token: '', agent: '' }; }
         }
         function haReady() { const c = getHaCfg(); return !!(c.url && c.token); }
-        async function haFetch(path, body) {
+        // Kein Request darf ewig hängen — nach timeoutMs bricht ab, statt
+        // dass "Jarvis denkt…" für immer stehen bleibt (Fallback auf Groq).
+        async function haFetch(path, body, timeoutMs = 15000) {
             const c = getHaCfg();
-            const res = await fetch(c.url + path, {
-                method: body ? 'POST' : 'GET',
-                headers: { 'Authorization': 'Bearer ' + c.token, 'Content-Type': 'application/json' },
-                body: body ? JSON.stringify(body) : undefined
-            });
-            if (!res.ok) throw new Error('HA ' + res.status);
-            return res.json();
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), timeoutMs);
+            try {
+                const res = await fetch(c.url + path, {
+                    method: body ? 'POST' : 'GET',
+                    headers: { 'Authorization': 'Bearer ' + c.token, 'Content-Type': 'application/json' },
+                    body: body ? JSON.stringify(body) : undefined,
+                    signal: ctrl.signal
+                });
+                if (!res.ok) throw new Error('HA ' + res.status);
+                return await res.json();
+            } finally { clearTimeout(t); }
         }
         function haCallService(domain, service, data) { return haFetch(`/api/services/${domain}/${service}`, data || {}); }
-        // Frage an die Assist-Pipeline (Gemini) — Antwort kommt als Text zurück
+        // Frage an die Assist-Pipeline — Antwort kommt als Text zurück.
+        // agent_id (Zahnrad → Home Assistant → Assist-Agent) zwingt die
+        // Anfrage auf deine Gemini-Pipeline "Jarvis" statt den eingebauten
+        // Standard-Agent, der offene Fragen nicht beantworten kann.
         async function haConverse(text) {
-            const j = await haFetch('/api/conversation/process', { text, language: 'de' });
+            const c = getHaCfg();
+            const body = { text, language: 'de' };
+            if (c.agent) body.agent_id = c.agent;
+            const j = await haFetch('/api/conversation/process', body);
             return j?.response?.speech?.plain?.speech || '';
         }
         // Geräte-Start → HA-Skripte (gleiche Namen wie beim Tab5)
@@ -1873,7 +1877,12 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
         function saveHaSettings() {
             const u = document.getElementById('haUrl').value.trim();
             const t = document.getElementById('haToken').value.trim();
-            try { if (u) localStorage.setItem('haUrl', u); if (t) localStorage.setItem('haToken', t); } catch(e) {}
+            const a = document.getElementById('haAgent').value.trim();
+            try {
+                if (u) localStorage.setItem('haUrl', u);
+                if (t) localStorage.setItem('haToken', t);
+                localStorage.setItem('haAgent', a);
+            } catch(e) {}
             document.getElementById('haToken').value = '';
             updateHaStatus();
         }
@@ -1883,7 +1892,12 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             try { await haFetch('/api/'); el.textContent = '✅ Verbunden — Skripte & Gemini laufen über HA'; el.style.color = '#4ec99a'; }
             catch(e) { el.textContent = '⚠️ Keine Verbindung (Adresse/Token prüfen)'; el.style.color = '#f39c12'; }
         }
-        setTimeout(() => { try { const c = getHaCfg(); if (c.url) document.getElementById('haUrl').value = c.url; updateHaStatus(); } catch(e) {} }, 500);
+        setTimeout(() => { try {
+            const c = getHaCfg();
+            if (c.url) document.getElementById('haUrl').value = c.url;
+            if (c.agent) document.getElementById('haAgent').value = c.agent;
+            updateHaStatus();
+        } catch(e) {} }, 500);
 
         // Display dauerhaft anlassen (Alexa-Modus am Samsung)
         if ('wakeLock' in navigator) {
@@ -1919,6 +1933,14 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             if (lq.startsWith("notiz löschen") || lq.startsWith("notiz loeschen")) { const m = lq.match(/\d+/); if (lq.includes("alle")) { savedNotes=[]; saveNotesToStorage(); openNotesListMode(); } else deleteNote(m ? parseInt(m[0])-1 : savedNotes.length-1); return; }
             if (lq === "notizen") { openNotesListMode(); return; }
             if (lq.startsWith("notiz ")) { openNoteMode(query.substring(6).trim()); return; }
+            // Musik & Lichter laufen komplett über Home Assistant (Gemini/
+            // Assist schaltet und antwortet). Ohne HA-Verbindung greifen die
+            // alten Demo-Ansichten darunter.
+            if (haReady() && (lq.startsWith("spiele ") || lq.startsWith("play ")
+                || /^(skip|weiter|zurück|back|pause|stop|play|musik)$/.test(lq)
+                || /\b(licht\w*|led\w*|lampe\w*)\b/.test(lq))) {
+                askJarvisAI(query); return;
+            }
             if (lq.startsWith("spiele ") || lq.startsWith("play ")) { openMusicMode(); spotifyPlay(query.replace(/^(spiele|play)\s+/i,'').trim()); return; }
             if (lq === "skip" || lq === "weiter") { skipTrack(); openMusicMode(); return; }
             if (lq === "zurück" || lq === "back") { prevTrack(); openMusicMode(); return; }
@@ -2083,17 +2105,8 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             if (lqPC.startsWith('route') || lqPC.startsWith('verbindung') || lqPC.includes('wie komme ich')) { const rq = parseRouteQuery(lqPC); if (rq) { openRouteMode(rq.from, rq.to); return; } }
             if (lqPC === 'bahn' || lqPC === 'zug' || lqPC === 'öpnv' || lqPC === 'oepnv' || lqPC.includes('abfahrt') || lqPC.includes('s-bahn') || lqPC === 'sbahn') { openTransitMode(); return; }
 
-            // Licht-Befehle direkt abfangen (funktioniert auch ohne Groq)
-            const mentionsLight = /\b(licht\w*|led\w*|lampe\w*)\b/.test(lqPC) || (goveeDevices.length > 0 && matchGoveeTargets(lqPC).length > 0);
-            const hasLightAction = /\b(an|aus|einschalt\w*|anschalt\w*|ausschalt\w*|anmach\w*|ausmach\w*|lösch\w*|loesch\w*|heller|dunkler|dimm\w*|\d+|prozent)\b/.test(lqPC)
-                                   || Object.keys(COLOR_MAP).some(c => lqPC.includes(c));
-            if (getGoveeKey() && mentionsLight && hasLightAction) {
-                controlGoveeLights(lqPC).then(msg => {
-                    openLedControlWindow();
-                    if (msg) { setLabelJ('💡 Lichter', msg); jarvisSpeak(msg); }
-                });
-                return;
-            }
+            // Licht-Befehle → Home Assistant (Gemini/Assist schaltet & antwortet)
+            if (/\b(licht\w*|led\w*|lampe\w*)\b/.test(lqPC) && haReady()) { askJarvisAI(query); return; }
 
             // Fahrtzeit (Auto) & Geräte-Start direkt abfangen
             if (/fahrtzeit|fahrzeit|autofahrt|wie lange (fahre|fährt|braucht)/.test(lqPC)) { const dq = parseDriveQuery(lqPC); if (dq) { openDriveMode(dq.from, dq.to); return; } }
@@ -2106,14 +2119,9 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             if (pcAppPC) { openLaunchMode('pc', pcAppPC[1]); return; }
             if (/\b(computer|rechner|pc)\b/.test(lqPC) && /\b(an|start\w*|hochfahr\w*|einschalt\w*)\b/.test(lqPC)) { openLaunchMode('pc', 'windows'); return; }
 
-            if (!loadGroqKey()) {
-                directDispatch(query); return;
-            }
-
-            const intent = await classifyWithGroq(query);
-            if (!intent) { directDispatch(query); return; }
-
-            executeIntent(intent, query);
+            // Alles Übrige regelt directDispatch — unbekannte Fragen landen
+            // dort am Ende bei Home Assistant (Gemini).
+            directDispatch(query);
         }
 
         // "10 sekunden", "5 min", "1 stunde 30 minuten" → Sekunden (Zahl ohne Einheit = Minuten)
@@ -4446,87 +4454,34 @@ Erkenne Tippfehler, Umgangssprache und natürliche Sätze:
             showJ('infoModeJ', 1);
             setLabelJ('Jarvis KI', 'Denke nach…');
 
-            // Erst über Home Assistant (Assist-Pipeline / Gemini) — die kennt
-            // auch deine Geräte. Groq bleibt Fallback, wenn HA nicht antwortet.
-            if (haReady()) {
-                try {
-                    const answer = await haConverse(question);
-                    if (answer) {
-                        let yPos = 220, currentLine = '';
-                        answer.split(' ').forEach(word => {
-                            if ((currentLine + word).length > 52) {
-                                createSvgLine(currentLine.trim(), yPos);
-                                currentLine = word + ' ';
-                                yPos += 32;
-                                if (yPos > 490) return;
-                            } else currentLine += word + ' ';
-                        });
-                        if (currentLine.trim()) createSvgLine(currentLine.trim(), yPos);
-                        setLabelJ('Jarvis KI', 'Antwort über Home Assistant');
-                        jarvisSpeak(answer);
-                        return;
-                    }
-                } catch(e) { /* HA nicht erreichbar → weiter mit Groq */ }
-            }
-
-            const apiKey = loadGroqKey();
-
-            if (!apiKey) {
-                createSvgLine('Kein Groq API-Key gespeichert.', 220);
-                createSvgLine('Bitte Key rechts eingeben und 💾 drücken.', 255);
-                createSvgLine('Key bekommst du auf: console.groq.com', 290);
-                setLabelJ('Jarvis KI', 'API-Key fehlt.');
+            // Alles läuft über Home Assistant: die Assist-Pipeline (Gemini)
+            // versteht die Frage, schaltet Geräte und liefert die Antwort.
+            if (!haReady()) {
+                createSvgLine('Home Assistant ist nicht verbunden.', 220);
+                createSvgLine('Zahnrad ⚙ → Adresse & Token eintragen.', 255);
+                setLabelJ('Jarvis KI', 'Keine Verbindung zum Home Server.');
+                jarvisSpeak('Ich bin nicht mit dem Home Server verbunden.');
                 return;
             }
-
             try {
-                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + apiKey,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        model: 'llama-3.3-70b-versatile',
-                        messages: [
-                            { role: 'system', content: 'Du bist Jarvis, ein präziser KI-Assistent. Antworte immer auf Deutsch, kurz und klar. Maximal 3 Sätze.' },
-                            { role: 'user', content: question }
-                        ],
-                        max_tokens: 200,
-                        temperature: 0.7
-                    })
-                });
-
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    const msg = err.error?.message || 'API-Fehler ' + res.status;
-                    createSvgLine(msg.slice(0, 60), 240);
-                    setLabelJ('Jarvis KI', 'Fehler bei der Anfrage.');
-                    return;
-                }
-
-                const data = await res.json();
-                const text = data.choices?.[0]?.message?.content?.trim() || 'Keine Antwort erhalten.';
-
-                let yPos = 220;
-                let currentLine = '';
-                text.split(' ').forEach(word => {
+                const answer = (await haConverse(question)) || 'Darauf habe ich keine Antwort bekommen.';
+                let yPos = 220, currentLine = '';
+                answer.split(' ').forEach(word => {
                     if ((currentLine + word).length > 52) {
                         createSvgLine(currentLine.trim(), yPos);
                         currentLine = word + ' ';
                         yPos += 32;
                         if (yPos > 490) return;
-                    } else {
-                        currentLine += word + ' ';
-                    }
+                    } else currentLine += word + ' ';
                 });
                 if (currentLine.trim()) createSvgLine(currentLine.trim(), yPos);
-                setLabelJ('Jarvis KI', 'Antwort von Groq · llama-3.3-70b');
-
+                setLabelJ('Jarvis KI', 'Antwort über Home Assistant');
+                jarvisSpeak(answer);
             } catch(e) {
-                createSvgLine('Verbindung zu Groq fehlgeschlagen.', 240);
+                createSvgLine('Der Home Server antwortet nicht.', 240);
                 createSvgLine(String(e.message || e).slice(0, 55), 275);
-                setLabelJ('Jarvis KI', 'Netzwerkfehler.');
+                setLabelJ('Jarvis KI', 'Home Assistant nicht erreichbar.');
+                jarvisSpeak('Der Home Server antwortet gerade nicht.');
             }
         }
 
