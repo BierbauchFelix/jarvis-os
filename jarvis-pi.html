@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jarvis OS · Pi Display</title>
+<!-- ============================================================
+     JARVIS OS — Leichtbau-Anzeige für Raspberry Pi 2 (Kiosk)
+     ------------------------------------------------------------
+     Bewusst OHNE: CSS-Filter, Schatten, Dauer-Animationen, große
+     Bilder. Alles wird nur neu gezeichnet, wenn sich Daten ändern —
+     dadurch läuft die Seite auch auf sehr schwacher Hardware flüssig.
+
+     Seiten-Wechsel per Sprache: eine HA-Automation schreibt das Ziel
+     ("wetter", "musik", "lichter", "notizen", "home") in den Helfer
+     input_text.jarvis_seite — diese Seite hört zu und schaltet um.
+     Einrichtung: siehe PI-SETUP.md im Repo.
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Modak&display=swap" rel="stylesheet">
+<style>
+:root{ --bg:#0b0e18; --card:#10141f; --line:#33447a; --blue:#5566cc;
+  --purple:#7d63d8; --green:#4ec99a; --text:#eef1f9; --text2:#b0bce0; --muted:#838fb8; }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
+  font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+#bg{position:fixed;inset:0;z-index:0}
+#bg svg{width:100%;height:100%}
+.br{position:fixed;background:var(--blue);opacity:.5;z-index:2}
+#app{position:relative;z-index:1;height:100%;padding:24px}
+.page{display:none;height:100%}
+.page.on{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.tag{font-size:11px;letter-spacing:3px;color:var(--blue)}
+/* HOME */
+#p-home .clock{font-family:'Modak',cursive;font-size:17vw;line-height:1;color:#c9d0ff}
+#p-home .date{font-size:2.6vw;color:var(--text2);margin-top:8px}
+#p-home .wx{font-size:2.2vw;color:var(--muted);margin-top:22px}
+#p-home .media{font-size:1.8vw;color:var(--purple);margin-top:12px;min-height:1.4em}
+#status{position:fixed;bottom:26px;left:0;right:0;text-align:center;
+  font-size:12px;letter-spacing:2px;color:#55608c;z-index:2}
+#hadot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#d4537e;margin-right:8px}
+#hadot.ok{background:var(--green)}
+/* Karten-Seiten */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:26px 34px;max-width:86vw;min-width:60vw}
+.card h2{font-size:15px;letter-spacing:2px;color:var(--text2);margin-bottom:18px}
+.big{font-size:6vw;font-weight:600}
+.sub{font-size:2vw;color:var(--muted);margin-top:6px}
+.row{display:flex;justify-content:space-between;gap:20px;padding:12px 0;
+  border-top:1px solid #1a2038;font-size:2.2vw}
+.row:first-of-type{border-top:none}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#3a4160;margin-right:10px}
+.dot.on{background:var(--green)}
+#mbar{width:100%;height:6px;border-radius:3px;background:#1a2038;margin-top:20px}
+#mfill{height:100%;width:0;border-radius:3px;background:var(--purple)}
+#notes{font-size:2vw;color:#a6b2dc;line-height:1.6;white-space:pre-wrap}
+/* Konfiguration */
+#cfg{position:fixed;inset:0;background:var(--bg);z-index:10;display:none;
+  align-items:center;justify-content:center}
+#cfg.on{display:flex}
+#cfg .box{width:min(460px,92vw)}
+#cfg label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--muted);margin:12px 0 4px}
+#cfg input{width:100%;background:#1a2038;border:1px solid var(--line);color:var(--text);
+  border-radius:8px;padding:9px 11px;font-size:13px}
+#cfg button{margin-top:16px;width:100%;background:var(--purple);border:none;color:#fff;
+  border-radius:8px;padding:12px;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="bg"><svg viewBox="0 0 1280 720" preserveAspectRatio="xMidYMax slice">
+  <rect width="1280" height="720" fill="#0B0E18"/>
+  <g opacity="0.14">
+    <path d="M 120 720 L 360 300 L 560 720 Z" fill="#3f4666"/>
+    <path d="M 760 720 L 980 360 L 1180 720 Z" fill="#3f4666"/>
+    <path d="M 300 720 L 640 150 L 980 720 Z" fill="#5a6284"/>
+    <path d="M 640 150 L 980 720 L 760 720 L 640 320 Z" fill="#454c6e"/>
+    <path d="M 640 150 L 700 300 L 640 270 L 590 330 L 555 285 Z" fill="#c7cee6" opacity="0.7"/>
+  </g>
+</svg></div>
+<i class="br" style="top:16px;left:18px;width:28px;height:2px"></i><i class="br" style="top:16px;left:18px;width:2px;height:28px"></i>
+<i class="br" style="top:16px;right:18px;width:28px;height:2px"></i><i class="br" style="top:16px;right:18px;width:2px;height:28px"></i>
+<i class="br" style="bottom:16px;left:18px;width:28px;height:2px"></i><i class="br" style="bottom:16px;left:18px;width:2px;height:28px"></i>
+<i class="br" style="bottom:16px;right:18px;width:28px;height:2px"></i><i class="br" style="bottom:16px;right:18px;width:2px;height:28px"></i>
+
+<div id="app">
+  <div class="page on" id="p-home">
+    <div class="clock" id="clock">--:--</div>
+    <div class="date" id="date">—</div>
+    <div class="wx" id="wx">Wetter wird geladen …</div>
+    <div class="media" id="media"></div>
+  </div>
+
+  <div class="page" id="p-wetter">
+    <div class="card"><h2>◈ WETTERSTATION</h2>
+      <div class="big" id="w-temp">--°</div>
+      <div class="sub" id="w-desc">—</div>
+      <div style="margin-top:18px" id="w-rows"></div>
+    </div>
+  </div>
+
+  <div class="page" id="p-musik">
+    <div class="card"><h2>◈ NOW PLAYING</h2>
+      <div class="big" id="m-title" style="font-size:3.6vw">Keine Wiedergabe</div>
+      <div class="sub" id="m-artist">—</div>
+      <div id="mbar"><div id="mfill"></div></div>
+    </div>
+  </div>
+
+  <div class="page" id="p-lichter">
+    <div class="card"><h2>◈ LICHT-STEUERUNG</h2><div id="l-rows"></div></div>
+  </div>
+
+  <div class="page" id="p-notizen">
+    <div class="card"><h2>◈ NOTIZEN</h2><div id="notes">—</div></div>
+  </div>
+</div>
+
+<div id="status"><span id="hadot"></span><span class="tag">JARVIS OS · PI DISPLAY</span></div>
+
+<div id="cfg"><div class="box">
+  <h2 class="tag" style="font-size:14px">⚙ EINRICHTUNG</h2>
+  <label>HOME-ASSISTANT-ADRESSE</label><input id="c-url" placeholder="http://192.168.0.101:8123">
+  <label>ZUGRIFFS-TOKEN</label><input id="c-token" placeholder="eyJ…">
+  <label>SEITEN-HELFER</label><input id="c-page" value="input_text.jarvis_seite">
+  <label>MUSIK-PLAYER</label><input id="c-media" value="media_player.spotify_felix">
+  <label>LICHT 1 (ENTITÄT;NAME)</label><input id="c-l1" value="light.wohnzimmer;Wohnzimmer">
+  <label>LICHT 2 (ENTITÄT;NAME)</label><input id="c-l2" value="light.schreibtisch;Schreibtisch">
+  <label>NOTIZEN-HELFER</label><input id="c-notes" value="input_text.jarvis_notizen">
+  <button onclick="saveCfg()">SPEICHERN & VERBINDEN</button>
+</div></div>
+
+<script>
+"use strict";
+var $=function(id){return document.getElementById(id);};
+var cfg={};
+try{cfg=JSON.parse(localStorage.getItem("piCfg")||"{}");}catch(e){}
+var FIELDS=[["c-url","url"],["c-token","token"],["c-page","page"],["c-media","media"],
+  ["c-l1","l1"],["c-l2","l2"],["c-notes","notes"]];
+function saveCfg(){
+  FIELDS.forEach(function(f){cfg[f[1]]=$(f[0]).value.trim();});
+  try{localStorage.setItem("piCfg",JSON.stringify(cfg));}catch(e){}
+  $("cfg").classList.remove("on"); connect();
+}
+if(!cfg.token){ $("cfg").classList.add("on"); }
+else FIELDS.forEach(function(f){ if(cfg[f[1]]) $(f[0]).value=cfg[f[1]]; });
+/* Dreifach-Tipp auf den Status öffnet die Einrichtung wieder */
+var taps=0,tapT=null;
+$("status").addEventListener("click",function(){
+  taps++; clearTimeout(tapT); tapT=setTimeout(function(){taps=0;},800);
+  if(taps>=3){ FIELDS.forEach(function(f){ if(cfg[f[1]]) $(f[0]).value=cfg[f[1]]; }); $("cfg").classList.add("on"); }
+});
+
+/* ── Uhr (nur 1× pro Minute neu zeichnen) ── */
+var DAYS=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+var MON=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+var lastMin=-1;
+function tick(){
+  var n=new Date();
+  if(n.getMinutes()===lastMin)return;
+  lastMin=n.getMinutes();
+  $("clock").textContent=("0"+n.getHours()).slice(-2)+":"+("0"+n.getMinutes()).slice(-2);
+  $("date").textContent=DAYS[n.getDay()]+", "+n.getDate()+". "+MON[n.getMonth()]+" "+n.getFullYear();
+}
+tick(); setInterval(tick,5000);
+
+/* ── Wetter (Open-Meteo, alle 10 Min) ── */
+var WMO=[[0,"Klarer Himmel"],[1,"Überwiegend klar"],[2,"Teils bewölkt"],[3,"Bedeckt"],
+  [45,"Nebel"],[51,"Nieselregen"],[61,"Leichter Regen"],[63,"Regen"],[65,"Starker Regen"],
+  [71,"Schneefall"],[80,"Regenschauer"],[95,"Gewitter"]];
+function wmo(c){var r=WMO[0];for(var i=0;i<WMO.length;i++)if(c>=WMO[i][0])r=WMO[i];return r[1];}
+function fetchWx(){
+  fetch("https://api.open-meteo.com/v1/forecast?latitude=48.2632&longitude=11.4342&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FBerlin&forecast_days=5")
+  .then(function(r){return r.json();})
+  .then(function(j){
+    var c=j.current, t=Math.round(c.temperature_2m), d=wmo(c.weather_code);
+    $("wx").textContent=t+"° · "+d+" · Dachau";
+    $("w-temp").textContent=t+"°";
+    $("w-desc").textContent=d+" · Gefühlt "+Math.round(c.apparent_temperature)+"° · "
+      +c.relative_humidity_2m+" % · "+Math.round(c.wind_speed_10m)+" km/h";
+    var rows="",dy=j.daily,names=["HEUTE","MORGEN","","",""];
+    for(var i=0;i<5;i++){
+      var dt=new Date(dy.time[i]);
+      var nm=names[i]||DAYS[dt.getDay()].slice(0,2).toUpperCase();
+      rows+='<div class="row"><span>'+nm+'</span><span style="color:#838fb8">'+wmo(dy.weather_code[i])
+        +'</span><span>'+Math.round(dy.temperature_2m_max[i])+'° / '
+        +Math.round(dy.temperature_2m_min[i])+'°</span></div>';
+    }
+    $("w-rows").innerHTML=rows;
+  }).catch(function(){ $("wx").textContent="Wetter nicht erreichbar"; });
+}
+fetchWx(); setInterval(fetchWx,600000);
+
+/* ── Seiten-Umschaltung + Auto-Rückkehr (60 s) ── */
+var PAGES=["home","wetter","musik","lichter","notizen"];
+var curPage="home", backT=null;
+function showPage(p){
+  if(PAGES.indexOf(p)<0)p="home";
+  if(p===curPage)return;
+  $("p-"+curPage).classList.remove("on");
+  $("p-"+p).classList.add("on");
+  curPage=p;
+  clearTimeout(backT);
+  if(p!=="home") backT=setTimeout(function(){
+    /* Musik bleibt offen, solange etwas spielt */
+    if(curPage==="musik" && mediaPlaying){ backT=setTimeout(arguments.callee,60000); return; }
+    showPage("home");
+  },60000);
+}
+
+/* ── Home Assistant WebSocket ── */
+var ws=null,msgId=0,wsOk=false,statesReq=0,retryT=null,states={};
+var mediaPlaying=false,mediaPos=0,mediaDur=0,mediaTickT=null;
+function connect(){
+  clearTimeout(retryT);
+  if(ws){try{ws.close();}catch(e){}}
+  if(!cfg.url||!cfg.token)return;
+  try{ ws=new WebSocket(cfg.url.replace(/^http/,"ws").replace(/\/$/,"")+"/api/websocket"); }
+  catch(e){ retry(); return; }
+  ws.onmessage=function(ev){
+    var m=JSON.parse(ev.data);
+    if(m.type==="auth_required") ws.send(JSON.stringify({type:"auth",access_token:cfg.token}));
+    else if(m.type==="auth_ok"){
+      wsOk=true; $("hadot").className="ok";
+      statesReq=++msgId; ws.send(JSON.stringify({id:statesReq,type:"get_states"}));
+      ws.send(JSON.stringify({id:++msgId,type:"subscribe_events",event_type:"state_changed"}));
+    }
+    else if(m.type==="auth_invalid"){ $("hadot").className=""; $("cfg").classList.add("on"); }
+    else if(m.type==="result"&&m.id===statesReq&&m.success){
+      for(var i=0;i<m.result.length;i++) states[m.result[i].entity_id]=m.result[i];
+      renderAll();
+    }
+    else if(m.type==="event"&&m.event&&m.event.data&&m.event.data.new_state){
+      var d=m.event.data; states[d.entity_id]=d.new_state; onEntity(d.entity_id);
+    }
+  };
+  ws.onclose=function(){ wsOk=false; $("hadot").className=""; retry(); };
+  ws.onerror=function(){ try{ws.close();}catch(e){} };
+}
+function retry(){ clearTimeout(retryT); retryT=setTimeout(connect,6000); }
+function l1id(){ return (cfg.l1||"").split(";")[0]; }
+function l2id(){ return (cfg.l2||"").split(";")[0]; }
+function onEntity(id){
+  if(id===cfg.page){ var s=states[id]; if(s) showPage(String(s.state).toLowerCase().trim()); }
+  else if(id===cfg.media) renderMedia();
+  else if(id===l1id()||id===l2id()) renderLights();
+  else if(id===cfg.notes) renderNotes();
+}
+function renderAll(){ renderMedia(); renderLights(); renderNotes();
+  var s=states[cfg.page]; if(s&&PAGES.indexOf(s.state)>=0&&s.state!=="home") showPage(s.state); }
+
+function renderMedia(){
+  var s=states[cfg.media], a=s?s.attributes:{};
+  mediaPlaying=!!(s&&s.state==="playing");
+  $("m-title").textContent=(s&&a.media_title)?a.media_title:"Keine Wiedergabe";
+  $("m-artist").textContent=(s&&a.media_artist)?a.media_artist:"—";
+  $("media").textContent=mediaPlaying?("♪ "+(a.media_title||"")+(a.media_artist?" — "+a.media_artist:"")):"";
+  mediaPos=a.media_position||0; mediaDur=a.media_duration||0;
+  var upd=a.media_position_updated_at?new Date(a.media_position_updated_at).getTime():Date.now();
+  clearInterval(mediaTickT);
+  function draw(){
+    var pos=mediaPos+(mediaPlaying?(Date.now()-upd)/1000:0);
+    $("mfill").style.width=(mediaDur?Math.min(100,100*pos/mediaDur):0)+"%";
+  }
+  draw();
+  /* Balken tickt NUR, wenn die Musik-Seite sichtbar ist — spart Rechenzeit */
+  if(mediaPlaying) mediaTickT=setInterval(function(){ if(curPage==="musik")draw(); },1000);
+}
+function renderLights(){
+  var rows="", defs=[cfg.l1,cfg.l2];
+  for(var i=0;i<defs.length;i++){
+    if(!defs[i])continue;
+    var p=defs[i].split(";"), s=states[p[0]];
+    var on=s&&s.state==="on";
+    var bri=(s&&s.attributes.brightness!=null)?Math.round(s.attributes.brightness/2.55)+" %":"";
+    rows+='<div class="row"><span><i class="dot'+(on?" on":"")+'"></i>'+(p[1]||p[0])
+      +'</span><span style="color:#838fb8">'+(on?("An"+(bri?" · "+bri:"")):"Aus")+'</span></div>';
+  }
+  $("l-rows").innerHTML=rows||'<div class="sub">Keine Lichter konfiguriert.</div>';
+}
+function renderNotes(){
+  var s=states[cfg.notes];
+  $("notes").textContent=(s&&s.state&&["unknown","unavailable"].indexOf(s.state)<0)
+    ?s.state:"Noch keine Notizen.";
+}
+connect();
+</script>
+</body>
+</html>
