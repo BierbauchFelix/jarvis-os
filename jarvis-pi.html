@@ -132,6 +132,65 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
   padding:14px 16px;border-left:3px solid var(--blue)}
 .rbox b{display:block;font-size:2.4vw}
 .rbox i{font-style:normal;font-size:10px;letter-spacing:2px;color:var(--muted)}
+/* Wetter-Balken (wie Original: Akzent links, Trennlinie, LIVE FEED) */
+.wxbar{position:relative;display:flex;align-items:center;gap:26px;margin-top:26px;
+  border:1px solid var(--line);border-radius:14px;background:var(--card);
+  padding:20px 26px;border-left:4px solid var(--blue);min-width:34vw}
+.wxbar .live{position:absolute;top:10px;right:14px;font-size:9px;letter-spacing:3px;color:var(--blue)}
+.wxbar .unit{position:absolute;bottom:8px;left:110px;font-size:9px;letter-spacing:3px;color:#2e3658}
+.wxbar .sep{width:1px;align-self:stretch;background:#232a44}
+.wxbar .lbl{font-size:9px;letter-spacing:3px;color:#3a4160}
+.wxbar .city{font-size:2vw;font-weight:700}
+.wxbar .cond{font-size:1.4vw;color:var(--text2)}
+/* Statusleiste (SYSTEM ONLINE | NEURAL NET READY | VOICE ACTIVE) */
+.sysbar{display:flex;margin-top:16px;border:1px solid var(--line);border-radius:12px;
+  background:var(--card);overflow:hidden}
+.sysbar span{flex:1;padding:12px 18px;font-size:10px;letter-spacing:2px;
+  color:var(--blue);border-left:1px solid #232a44;white-space:nowrap}
+.sysbar span:first-child{border-left:none;color:var(--green)}
+.sysbar b{display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--blue);margin-right:8px;vertical-align:middle}
+.sysbar span:first-child b{background:var(--green)}
+/* Mathe (Chips + Ergebnis wie CALC-CORE) */
+.mchips{display:flex;gap:16px;justify-content:center;margin:28px 0}
+.mchip{min-width:96px;padding:22px 0;text-align:center;font-size:3vw;font-weight:700;
+  background:#131722;border:1px solid var(--line);border-radius:14px}
+.mchip.op{border-color:var(--blue);color:#7f8de0;background:#161b2c}
+.mres{display:flex;align-items:center;justify-content:center;gap:26px;margin-top:10px}
+.mres .eq{font-size:3vw;color:#7f8de0}
+.mres .val{font-size:8vw;font-weight:700}
+.calcv{position:absolute;right:16px;bottom:10px;font-size:9px;letter-spacing:3px;color:#2e3658}
+/* MVG im Original-Stil: Zeit + Badge + Ziel + in-min + Status */
+.mvg-row{background:#141828;border:none;border-radius:12px;margin-top:10px;
+  padding:14px 18px}
+.mvg-time{font-weight:700;font-size:2vw;width:3.4em}
+.mvg-eta{color:var(--muted);font-size:1.6vw;white-space:nowrap}
+.mvg-ok{color:var(--green);font-size:1.8vw}
+.mvg-late{color:#f2a623;font-weight:700;font-size:1.7vw}
+.badge{background:#4b3a78;color:#fff}
+.badge.s{background:#2c8a4b}.badge.u{background:#0a4f9e}
+/* Lichter im Original-Stil: 2 Karten, An/Aus, Slider, Farbkreise */
+.lgrid2{display:flex;gap:16px}
+.lcard{flex:1;border:1px solid var(--line);border-left:3px solid var(--violet);
+  border-radius:14px;background:var(--card2);padding:16px}
+.lhead{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:1.7vw}
+.lbtns{margin-left:auto;display:flex;gap:8px}
+.lb{font-size:1.3vw;padding:6px 16px;border-radius:8px;border:1px solid var(--line);
+  background:var(--accent);color:#8a93b8}
+.lb.on{background:#241e45;border-color:var(--purple);color:#c9d0ff}
+.lslider{height:6px;border-radius:3px;background:var(--accent);position:relative;margin:16px 0 18px}
+.lslider .fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;
+  background:linear-gradient(90deg,var(--purple),var(--violet))}
+.lslider .knob{position:absolute;top:50%;transform:translate(-50%,-50%);width:20px;height:20px;
+  border-radius:50%;background:#c9d0ff;border:3px solid var(--purple)}
+.sw{display:flex;gap:10px}
+.sw i{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.14)}
+/* Musik im Original-Stil */
+.mbtns{display:flex;gap:22px;justify-content:center;margin-top:26px;align-items:center}
+.mbtn{width:58px;height:58px;border-radius:50%;background:var(--accent);
+  border:1px solid var(--line);color:#c9d0ff;font-size:19px;
+  display:flex;align-items:center;justify-content:center}
+.mbtn.play{width:70px;height:70px;background:var(--purple);border:none;color:#fff;font-size:24px}
 /* Karten-Eckakzente */
 .card::after{content:"";position:absolute;right:10px;bottom:10px;width:22px;height:22px;
   border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);opacity:.45;border-radius:0 0 6px 0}
@@ -178,9 +237,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
     <div class="home-left">
       <div class="clock" id="clock">--:--</div>
       <div class="date" id="date">—</div>
-      <div class="wxpill"><span style="font-size:3vw" id="wx-i">☁</span>
-        <span class="t" id="wx-t">--°</span>
-        <span class="d" id="wx-d">Wetter wird geladen …</span></div>
+      <div class="wxbar">
+        <span class="live">◈ LIVE FEED</span>
+        <span style="font-size:3.4vw" id="wx-i">☁</span>
+        <span style="font-size:3vw;font-weight:700" id="wx-t">--°</span>
+        <span class="sep"></span>
+        <div>
+          <div class="lbl">S T A N D O R T</div>
+          <div class="city">Dachau</div>
+          <div class="cond" id="wx-d">Wetter wird geladen …</div>
+        </div>
+        <span class="unit">CELSIUS · METRISCH</span>
+      </div>
+      <div class="sysbar">
+        <span><b></b>SYSTEM ONLINE</span>
+        <span><b></b>NEURAL NET READY</span>
+        <span><b></b>VOICE ACTIVE</span>
+      </div>
       <div class="chips">
         <div class="chip"><i>◈ S-BAHN</i><b id="ch-mvg">--</b></div>
         <div class="chip"><i>◈ ARBEIT</i><b id="ch-auto">--</b></div>
@@ -264,6 +337,19 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
     </div>
   </div>
 
+  <!-- ── MATHE / RECHENZENTRUM ── -->
+  <div class="page" id="p-mathe">
+    <div class="card"><h2><span>◈ RECHENZENTRUM</span><span></span></h2>
+      <div class="mchips">
+        <div class="mchip" id="ma">-</div>
+        <div class="mchip op" id="mo">+</div>
+        <div class="mchip" id="mb">-</div>
+      </div>
+      <div class="mres"><span class="eq">=</span><span class="val" id="mr">--</span></div>
+      <span class="calcv">CALC-CORE v2</span>
+    </div>
+  </div>
+
   <!-- ── MUSIK ── -->
   <div class="page" id="p-musik">
     <div class="card"><h2><span>◈ NOW PLAYING</span><span>SPOTIFY · HOME ASSISTANT</span></h2>
@@ -271,6 +357,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
       <div class="big" id="m-title" style="font-size:3.4vw">Keine Wiedergabe</div>
       <div class="sub" id="m-artist">—</div>
       <div id="mbar"><div id="mfill"></div></div>
+      <div class="mbtns">
+        <span class="mbtn">⏮</span>
+        <span class="mbtn play" id="m-play">▶</span>
+        <span class="mbtn">⏭</span>
+      </div>
     </div>
   </div>
 
@@ -362,8 +453,8 @@ function fetchWx(){
   .then(function(r){return r.json();})
   .then(function(j){
     var c=j.current, t=Math.round(c.temperature_2m), w=wmo(c.weather_code);
-    $("wx-i").textContent=w[1]; $("wx-t").textContent=t+"°";
-    $("wx-d").innerHTML=w[2]+"<br>Dachau · "+c.relative_humidity_2m+" % · "+Math.round(c.wind_speed_10m)+" km/h";
+    $("wx-i").textContent=w[1]; $("wx-t").textContent=t+"°C";
+    $("wx-d").textContent=w[2];
     $("w-icon").textContent=w[1]; $("w-temp").textContent=t+"°"; $("w-desc").textContent=w[2];
     $("w-feel").textContent=Math.round(c.apparent_temperature)+"°";
     $("w-hum").textContent=c.relative_humidity_2m+" %";
@@ -392,10 +483,16 @@ function fetchMvg(){
       var d=list[i];
       var mins=Math.max(0,Math.round((d.realtimeDepartureTime-Date.now())/60000));
       if(first===null)first={label:d.label,mins:mins};
-      var cls=d.transportType==="UBAHN"?" u":(d.transportType==="BUS"?" b":"");
-      rows+='<div class="mvg-row"><span class="badge'+cls+'">'+d.label+'</span>'
+      var cls=d.transportType==="SBAHN"?" s":(d.transportType==="UBAHN"?" u":"");
+      var dep=new Date(d.realtimeDepartureTime);
+      var hm=("0"+dep.getHours()).slice(-2)+":"+("0"+dep.getMinutes()).slice(-2);
+      var delay=d.delayInMinutes||0;
+      rows+='<div class="mvg-row"><span class="mvg-time">'+hm+'</span>'
+        +'<span class="badge'+cls+'">'+d.label+'</span>'
         +'<span class="mvg-dest">'+d.destination+'</span>'
-        +'<span class="mvg-min">'+(mins<1?"jetzt":mins+" min")+'</span></div>';
+        +'<span class="mvg-eta">'+(mins<1?"jetzt":"in "+mins+" min")+'</span>'
+        +(delay>0?'<span class="mvg-late">+'+delay+'</span>':'<span class="mvg-ok">✓</span>')
+        +'</div>';
     }
     $("mvg-rows").innerHTML=rows;
     $("ch-mvg").textContent=first?(first.label+" in "+first.mins+" min"):"--";
@@ -415,7 +512,7 @@ function renderRoute(){
 }
 
 /* ── Seiten-Umschaltung + Auto-Rückkehr (60 s) ── */
-var PAGES=["home","wetter","mvg","auto","musik","lichter","notizen"];
+var PAGES=["home","wetter","mvg","auto","mathe","musik","lichter","notizen"];
 var curPage="home", backT=null;
 function armBack(){
   clearTimeout(backT);
@@ -479,8 +576,22 @@ function onEntity(id){
   else if(id===l1id()||id===l2id()) renderLights();
   else if(id===cfg.notes) renderNotes();
   else if(id===cfg.route) renderRoute();
+  else if(id==="input_text.jarvis_mathe") renderMath(true);
 }
-function renderAll(){ renderMedia(); renderLights(); renderNotes(); renderRoute();
+/* Rechenzentrum: Helfer input_text.jarvis_mathe im Format "12 × 7 = 84" —
+   eine HA-Automation kann ihn nach einer Rechen-Frage füllen, die Seite
+   springt dann automatisch auf und zeigt die Chips. */
+function renderMath(jump){
+  var s=states["input_text.jarvis_mathe"]; if(!s)return;
+  var m=String(s.state).match(/(.+?)([+\-×÷*\/])(.+?)=(.+)/);
+  if(!m)return;
+  $("ma").textContent=m[1].trim();
+  $("mo").textContent=m[2].replace("*","×").replace("/","÷");
+  $("mb").textContent=m[3].trim();
+  $("mr").textContent=m[4].trim();
+  if(jump)showPage("mathe");   // nur bei NEUER Rechnung aufspringen
+}
+function renderAll(){ renderMedia(); renderLights(); renderNotes(); renderRoute(); renderMath();
   var s=states[cfg.page]; if(s&&PAGES.indexOf(s.state)>=0&&s.state!=="home") showPage(s.state); }
 
 function renderMedia(){
@@ -489,6 +600,7 @@ function renderMedia(){
   $("m-title").textContent=(s&&a.media_title)?a.media_title:"Keine Wiedergabe";
   $("m-artist").textContent=(s&&a.media_artist)?a.media_artist:"—";
   $("media").textContent=mediaPlaying?("♪ "+(a.media_title||"")+(a.media_artist?" — "+a.media_artist:"")):"";
+  $("m-play").textContent=mediaPlaying?"⏸":"▶";
   mediaPos=a.media_position||0; mediaDur=a.media_duration||0;
   var upd=a.media_position_updated_at?new Date(a.media_position_updated_at).getTime():Date.now();
   clearInterval(mediaTickT);
@@ -507,11 +619,17 @@ function renderLights(){
     var p=defs[i].split(";"), s=states[p[0]];
     var on=s&&s.state==="on";
     var pct=(s&&s.attributes.brightness!=null)?Math.round(s.attributes.brightness/2.55):(on?100:0);
-    rows+='<div class="lrow"><i class="dot'+(on?" on":"")+'"></i><span>'+(p[1]||p[0])+'</span>'
-      +'<span class="lbar"><span class="lfill" style="display:block;width:'+(on?pct:0)+'%"></span></span>'
-      +'<span class="lpct">'+(on?pct+" %":"Aus")+'</span></div>';
+    rows+='<div class="lcard"><div class="lhead"><i class="dot'+(on?" on":"")+'"></i>'+(p[1]||p[0])
+      +'<span class="lbtns"><span class="lb'+(on?" on":"")+'">An</span>'
+      +'<span class="lb'+(on?"":" on")+'">Aus</span></span></div>'
+      +'<div class="lslider"><span class="fill" style="width:'+(on?pct:0)+'%"></span>'
+      +'<span class="knob" style="left:'+(on?pct:0)+'%"></span></div>'
+      +'<div class="sw"><i style="background:#f2a623"></i><i style="background:#fff"></i>'
+      +'<i style="background:#378add"></i><i style="background:#1d9e75"></i>'
+      +'<i style="background:#d4537e"></i><i style="background:#9b6ce0"></i>'
+      +'<i style="background:#7d63d8"></i></div></div>';
   }
-  $("l-rows").innerHTML=rows||'<div class="sub">Keine Lichter konfiguriert.</div>';
+  $("l-rows").innerHTML=rows?('<div class="lgrid2">'+rows+'</div>'):'<div class="sub">Keine Lichter konfiguriert.</div>';
   var onCount=0, all=[l1id(),l2id()];
   for(var k=0;k<all.length;k++){ var st=states[all[k]]; if(st&&st.state==="on")onCount++; }
   $("ch-licht").textContent=onCount+" von "+all.filter(Boolean).length+" an";
@@ -537,13 +655,12 @@ function startDemo(){
     $("mfill").style.width=Math.min(100,100*pos/mediaDur)+"%";
   }
   drawDemo(); mediaTickT=setInterval(function(){ if(curPage==="musik")drawDemo(); },1000);
-  $("l-rows").innerHTML=
-    '<div class="lrow"><i class="dot on"></i><span>Wohnzimmer</span>'
-    +'<span class="lbar"><span class="lfill" style="display:block;width:70%"></span></span>'
-    +'<span class="lpct">70 %</span></div>'
-    +'<div class="lrow"><i class="dot"></i><span>Schreibtisch</span>'
-    +'<span class="lbar"><span class="lfill" style="display:block;width:0%"></span></span>'
-    +'<span class="lpct">Aus</span></div>';
+  /* Lichter über den normalen Renderer mit Beispiel-Zuständen */
+  states[l1id()]={state:"on",attributes:{brightness:178}};
+  states[l2id()]={state:"off",attributes:{}};
+  renderLights();
+  $("ma").textContent="1"; $("mo").textContent="+";
+  $("mb").textContent="1"; $("mr").textContent="2";
   $("notes").textContent="Milch kaufen\nPaket abholen\nJarvis-Anzeige testen ✓";
   $("r-time").textContent="28 min"; $("r-dist").textContent="24 km";
   var arrD=new Date(Date.now()+28*60000);
