@@ -99,6 +99,40 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
 .lfill{height:100%;width:0;background:linear-gradient(90deg,var(--purple),var(--violet))}
 .lpct{color:var(--muted);font-size:1.6vw;width:3.5em;text-align:right}
 #notes{font-size:2vw;color:#a6b2dc;line-height:1.65;white-space:pre-wrap}
+/* Kopfleiste */
+#hdr{position:fixed;top:22px;left:64px;right:64px;z-index:2;display:flex;
+  align-items:center;gap:14px;font-size:11px;letter-spacing:3px;color:var(--text2)}
+#hdr .t2{color:var(--blue)}
+#hdr .sp{flex:1}
+#hdr #hclock{color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:1px}
+/* Info-Chips auf Home */
+.chips{display:flex;gap:12px;margin-top:20px}
+.chip{border:1px solid var(--line);border-left:3px solid var(--purple);border-radius:10px;
+  background:var(--card);padding:10px 16px;font-size:1.35vw;color:var(--text2)}
+.chip b{color:var(--text);font-weight:600}
+.chip i{font-style:normal;display:block;font-size:9px;letter-spacing:2px;color:var(--muted)}
+/* MVG */
+.mvg-row{display:flex;align-items:center;gap:16px;padding:12px 4px;
+  border-top:1px solid #1a2038;font-size:2vw}
+.mvg-row:first-of-type{border-top:none}
+.badge{min-width:2.6em;text-align:center;font-weight:700;border-radius:7px;
+  padding:4px 8px;font-size:1.7vw;background:#2c8a4b;color:#fff}
+.badge.u{background:#0a4f9e}.badge.b{background:#8a2c5b}
+.mvg-dest{flex:1;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mvg-min{color:var(--violet);font-weight:600}
+/* Auto/Fahrtzeit */
+.rline{display:flex;align-items:center;gap:10px;margin:26px 0}
+.rdot{width:13px;height:13px;border-radius:50%;background:var(--blue)}
+.rdot.g{background:var(--green)}
+.rtrack{flex:1;height:2px;background:var(--blue);opacity:.55}
+.rboxes{display:flex;gap:14px;margin-top:22px}
+.rbox{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:14px 16px;border-left:3px solid var(--blue)}
+.rbox b{display:block;font-size:2.4vw}
+.rbox i{font-style:normal;font-size:10px;letter-spacing:2px;color:var(--muted)}
+/* Karten-Eckakzente */
+.card::after{content:"";position:absolute;right:10px;bottom:10px;width:22px;height:22px;
+  border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);opacity:.45;border-radius:0 0 6px 0}
 /* Status unten */
 #status{position:fixed;bottom:22px;left:0;right:0;text-align:center;z-index:2;
   font-size:11px;letter-spacing:2px;color:var(--dim)}
@@ -145,6 +179,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
       <div class="wxpill"><span style="font-size:3vw" id="wx-i">☁</span>
         <span class="t" id="wx-t">--°</span>
         <span class="d" id="wx-d">Wetter wird geladen …</span></div>
+      <div class="chips">
+        <div class="chip"><i>◈ S-BAHN</i><b id="ch-mvg">--</b></div>
+        <div class="chip"><i>◈ ARBEIT</i><b id="ch-auto">--</b></div>
+        <div class="chip"><i>◈ LICHTER</i><b id="ch-licht">--</b></div>
+      </div>
       <div class="media-line" id="media"></div>
     </div>
     <div class="home-right">
@@ -201,6 +240,28 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
     </div>
   </div>
 
+  <!-- ── MVG ── -->
+  <div class="page" id="p-mvg">
+    <div class="card"><h2><span>◈ MVG ABFAHRTEN</span><span>DACHAU BAHNHOF · LIVE</span></h2>
+      <div id="mvg-rows"><div class="sub">Abfahrten werden geladen …</div></div>
+    </div>
+  </div>
+
+  <!-- ── AUTO / FAHRTZEIT ── -->
+  <div class="page" id="p-auto">
+    <div class="card"><h2><span>◈ FAHRTZEIT</span><span>AUTO-ROUTE</span></h2>
+      <div style="display:flex;justify-content:space-between;font-size:2.2vw">
+        <span style="color:var(--text2)">Dachau</span><span style="color:var(--violet)">»</span><span>Arbeit</span>
+      </div>
+      <div class="rline"><span class="rdot"></span><span class="rtrack"></span><span style="font-size:2vw">🚗</span><span class="rtrack"></span><span class="rdot g"></span></div>
+      <div class="big" id="r-time" style="text-align:center">-- min</div>
+      <div class="rboxes">
+        <div class="rbox"><i>STRECKE</i><b id="r-dist">-- km</b></div>
+        <div class="rbox"><i>ANKUNFT CA.</i><b id="r-arr">--:--</b></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── MUSIK ── -->
   <div class="page" id="p-musik">
     <div class="card"><h2><span>◈ NOW PLAYING</span><span>SPOTIFY · HOME ASSISTANT</span></h2>
@@ -226,6 +287,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
   </div>
 </div>
 
+<div id="hdr"><span>JARVIS OS</span><span class="t2">◈ NEURAL LINK</span>
+  <span class="sp"></span><span id="hclock">--:--</span></div>
+
 <button class="navbtn navL" id="navL" title="Vorige Seite">‹</button>
 <button class="navbtn navR" id="navR" title="Nächste Seite">›</button>
 
@@ -240,6 +304,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
   <label>LICHT 1 (ENTITÄT;NAME)</label><input type="text" id="c-l1" value="light.wohnzimmer;Wohnzimmer">
   <label>LICHT 2 (ENTITÄT;NAME)</label><input type="text" id="c-l2" value="light.schreibtisch;Schreibtisch">
   <label>NOTIZEN-HELFER</label><input type="text" id="c-notes" value="input_text.jarvis_notizen">
+  <label>FAHRTZEIT-SENSOR</label><input type="text" id="c-route" value="sensor.fahrtzeit_arbeit">
   <div class="chk"><input type="checkbox" id="c-anim" checked>
     <span>Core-Ring rotieren lassen (abschalten, falls es ruckelt)</span></div>
   <button onclick="saveCfg()">SPEICHERN & VERBINDEN</button>
@@ -252,7 +317,7 @@ var $=function(id){return document.getElementById(id);};
 var cfg={anim:true};
 try{cfg=Object.assign({anim:true},JSON.parse(localStorage.getItem("piCfg")||"{}"));}catch(e){}
 var FIELDS=[["c-url","url"],["c-token","token"],["c-page","page"],["c-media","media"],
-  ["c-l1","l1"],["c-l2","l2"],["c-notes","notes"]];
+  ["c-l1","l1"],["c-l2","l2"],["c-notes","notes"],["c-route","route"]];
 function applyAnim(){ document.body.classList.toggle("spin", !!cfg.anim); }
 function saveCfg(){
   FIELDS.forEach(function(f){cfg[f[1]]=$(f[0]).value.trim();});
@@ -279,7 +344,8 @@ function tick(){
   var n=new Date();
   if(n.getMinutes()===lastMin)return;
   lastMin=n.getMinutes();
-  $("clock").textContent=("0"+n.getHours()).slice(-2)+":"+("0"+n.getMinutes()).slice(-2);
+  var hm=("0"+n.getHours()).slice(-2)+":"+("0"+n.getMinutes()).slice(-2);
+  $("clock").textContent=hm; $("hclock").textContent=hm;
   $("date").textContent=DAYS[n.getDay()]+", "+n.getDate()+". "+MON[n.getMonth()]+" "+n.getFullYear();
 }
 tick(); setInterval(tick,5000);
@@ -313,8 +379,41 @@ function fetchWx(){
 }
 fetchWx(); setInterval(fetchWx,600000);
 
+/* ── MVG-Abfahrten direkt von der MVG-API (Dachau Bahnhof, alle 2 Min) ── */
+function fetchMvg(){
+  fetch("https://www.mvg.de/api/bgw-pt/v3/departures?globalId=de:09174:6840&limit=8")
+  .then(function(r){return r.json();})
+  .then(function(list){
+    if(!list||!list.length){ $("mvg-rows").innerHTML='<div class="sub">Keine Abfahrten.</div>'; return; }
+    var rows="", first=null;
+    for(var i=0;i<list.length&&i<6;i++){
+      var d=list[i];
+      var mins=Math.max(0,Math.round((d.realtimeDepartureTime-Date.now())/60000));
+      if(first===null)first={label:d.label,mins:mins};
+      var cls=d.transportType==="UBAHN"?" u":(d.transportType==="BUS"?" b":"");
+      rows+='<div class="mvg-row"><span class="badge'+cls+'">'+d.label+'</span>'
+        +'<span class="mvg-dest">'+d.destination+'</span>'
+        +'<span class="mvg-min">'+(mins<1?"jetzt":mins+" min")+'</span></div>';
+    }
+    $("mvg-rows").innerHTML=rows;
+    $("ch-mvg").textContent=first?(first.label+" in "+first.mins+" min"):"--";
+  }).catch(function(){ $("mvg-rows").innerHTML='<div class="sub">MVG nicht erreichbar.</div>'; });
+}
+fetchMvg(); setInterval(fetchMvg,120000);
+
+/* ── Fahrtzeit (HA-Sensor, z. B. Waze Travel Time) ── */
+function renderRoute(){
+  var s=states[cfg.route]; if(!s||isNaN(+s.state))return;
+  var m=Math.round(+s.state);
+  $("r-time").textContent=(m>=60?((m/60)|0)+" h "+(m%60)+" min":m+" min");
+  $("ch-auto").textContent=m+" min";
+  if(s.attributes.distance) $("r-dist").textContent=Math.round(s.attributes.distance)+" km";
+  var a=new Date(Date.now()+m*60000);
+  $("r-arr").textContent=("0"+a.getHours()).slice(-2)+":"+("0"+a.getMinutes()).slice(-2)+" Uhr";
+}
+
 /* ── Seiten-Umschaltung + Auto-Rückkehr (60 s) ── */
-var PAGES=["home","wetter","musik","lichter","notizen"];
+var PAGES=["home","wetter","mvg","auto","musik","lichter","notizen"];
 var curPage="home", backT=null;
 function armBack(){
   clearTimeout(backT);
@@ -377,8 +476,9 @@ function onEntity(id){
   else if(id===cfg.media) renderMedia();
   else if(id===l1id()||id===l2id()) renderLights();
   else if(id===cfg.notes) renderNotes();
+  else if(id===cfg.route) renderRoute();
 }
-function renderAll(){ renderMedia(); renderLights(); renderNotes();
+function renderAll(){ renderMedia(); renderLights(); renderNotes(); renderRoute();
   var s=states[cfg.page]; if(s&&PAGES.indexOf(s.state)>=0&&s.state!=="home") showPage(s.state); }
 
 function renderMedia(){
@@ -410,6 +510,9 @@ function renderLights(){
       +'<span class="lpct">'+(on?pct+" %":"Aus")+'</span></div>';
   }
   $("l-rows").innerHTML=rows||'<div class="sub">Keine Lichter konfiguriert.</div>';
+  var onCount=0, all=[l1id(),l2id()];
+  for(var k=0;k<all.length;k++){ var st=states[all[k]]; if(st&&st.state==="on")onCount++; }
+  $("ch-licht").textContent=onCount+" von "+all.filter(Boolean).length+" an";
 }
 function renderNotes(){
   var s=states[cfg.notes];
@@ -440,6 +543,11 @@ function startDemo(){
     +'<span class="lbar"><span class="lfill" style="display:block;width:0%"></span></span>'
     +'<span class="lpct">Aus</span></div>';
   $("notes").textContent="Milch kaufen\nPaket abholen\nJarvis-Anzeige testen ✓";
+  $("r-time").textContent="28 min"; $("r-dist").textContent="24 km";
+  var arrD=new Date(Date.now()+28*60000);
+  $("r-arr").textContent=("0"+arrD.getHours()).slice(-2)+":"+("0"+arrD.getMinutes()).slice(-2)+" Uhr";
+  $("ch-auto").textContent="28 min"; $("ch-licht").textContent="1 von 2 an";
+  /* MVG läuft auch im Demo-Modus echt über die MVG-API */
   /* Seiten-Karussell: zeigt automatisch alle Ansichten der Reihe nach */
   clearInterval(demoCycleT);
   var order=["home","wetter","musik","lichter","notizen"], i=0;
