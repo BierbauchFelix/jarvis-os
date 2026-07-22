@@ -234,6 +234,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
   <div class="chk"><input type="checkbox" id="c-anim" checked>
     <span>Core-Ring rotieren lassen (abschalten, falls es ruckelt)</span></div>
   <button onclick="saveCfg()">SPEICHERN & VERBINDEN</button>
+  <button onclick="startDemo()" style="margin-top:10px;background:var(--accent);border:1px solid var(--line);color:var(--text2)">VORSCHAU OHNE HOME ASSISTANT</button>
 </div></div>
 
 <script>
@@ -398,6 +399,36 @@ function renderNotes(){
   $("notes").textContent=(s&&s.state&&["unknown","unavailable"].indexOf(s.state)<0)
     ?s.state:"Noch keine Notizen.\nSag: „Hey Jarvis, notiere …“";
 }
+/* ── Vorschau ohne Home Assistant: Beispieldaten + Seiten-Karussell ── */
+var demoT=null, demoCycleT=null;
+function startDemo(){
+  clearTimeout(retryT); if(ws){try{ws.close();}catch(e){}}
+  $("cfg").classList.remove("on");
+  $("hadot").className=""; $("hadot").title="Demo-Modus — nicht mit Home Assistant verbunden";
+  $("m-title").textContent="Weightless"; $("m-artist").textContent="Marconi Union";
+  $("media").textContent="♪ Weightless — Marconi Union";
+  mediaPlaying=true; mediaPos=97; mediaDur=240;
+  var updDemo=Date.now();
+  clearInterval(mediaTickT);
+  function drawDemo(){
+    var pos=mediaPos+(Date.now()-updDemo)/1000;
+    $("mfill").style.width=Math.min(100,100*pos/mediaDur)+"%";
+  }
+  drawDemo(); mediaTickT=setInterval(function(){ if(curPage==="musik")drawDemo(); },1000);
+  $("l-rows").innerHTML=
+    '<div class="lrow"><i class="dot on"></i><span>Wohnzimmer</span>'
+    +'<span class="lbar"><span class="lfill" style="display:block;width:70%"></span></span>'
+    +'<span class="lpct">70 %</span></div>'
+    +'<div class="lrow"><i class="dot"></i><span>Schreibtisch</span>'
+    +'<span class="lbar"><span class="lfill" style="display:block;width:0%"></span></span>'
+    +'<span class="lpct">Aus</span></div>';
+  $("notes").textContent="Milch kaufen\nPaket abholen\nJarvis-Anzeige testen ✓";
+  /* Seiten-Karussell: zeigt automatisch alle Ansichten der Reihe nach */
+  clearInterval(demoCycleT);
+  var order=["home","wetter","musik","lichter","notizen"], i=0;
+  demoCycleT=setInterval(function(){ i=(i+1)%order.length; showPage(order[i]); },4500);
+}
+
 connect();
 </script>
 </body>
