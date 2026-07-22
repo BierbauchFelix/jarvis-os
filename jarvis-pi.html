@@ -41,7 +41,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
 .glabel{font-size:12px;letter-spacing:2px;color:var(--green)}
 /* ── HOME: Uhr links, Core rechts ── */
 #p-home.on{flex-direction:row;gap:5vw}
-.home-left{display:flex;flex-direction:column;align-items:center}
+/* 1:1 wie die Web-Version: Holo-Core LINKS, Uhr/Wetter/Status RECHTS */
+.home-left{display:flex;flex-direction:column;align-items:center;order:2}
+.home-right{order:1}
 .clock{font-family:'Modak',cursive;font-size:15vw;line-height:1;
   background:linear-gradient(180deg,#c9d0ff 20%,#7d63d8);
   -webkit-background-clip:text;background-clip:text;color:transparent}
@@ -287,7 +289,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);overflow:hidden;
   </div>
 </div>
 
-<div id="hdr"><span>JARVIS OS</span><span class="t2">◈ NEURAL LINK</span>
+<div id="hdr"><span>Idle Dashboard</span><span class="t2">System empfangsbereit</span>
   <span class="sp"></span><span id="hclock">--:--</span></div>
 
 <button class="navbtn navL" id="navL" title="Vorige Seite">‹</button>
