@@ -429,7 +429,10 @@ function startDemo(){
   demoCycleT=setInterval(function(){ i=(i+1)%order.length; showPage(order[i]); },4500);
 }
 
-connect();
+/* Demo auch direkt per Adresse startbar: ...jarvis-pi.html?demo
+   (funktioniert unabhängig davon, ob schon ein Token gespeichert ist) */
+if (/[?&]demo\b/.test(location.search)) { startDemo(); }
+else connect();
 </script>
 </body>
 </html>
